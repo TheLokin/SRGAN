@@ -1,0 +1,12 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Visual Studio Code
+.vscode
+
+# Local files
+output
+data/2x
+data/4x
