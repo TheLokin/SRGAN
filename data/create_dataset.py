@@ -51,5 +51,5 @@ for filename in tqdm(os.listdir(opt.dataset), desc="Generating images from datas
                                  "preprocess" + str(number) + ".bmp"), img4x)
         number += 1
 
-split_dataset("2x")
-split_dataset("4x")
+split_dataset(os.path.join(opt.output, "2x"))
+split_dataset(os.path.join(opt.output, "4x"))
