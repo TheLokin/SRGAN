@@ -47,7 +47,7 @@ class Generator(nn.Module):
 
         # Residual blocks
         for i in range(n_residual_blocks):
-            self.add_module('residual' + str(i + 1), ResidualBlock(64))
+            self.add_module("residual" + str(i + 1), ResidualBlock(64))
 
         # Second convolutional layer post residual blocks
         self.conv2 = nn.Sequential(
@@ -57,7 +57,7 @@ class Generator(nn.Module):
 
         # Upsampling layers
         for i in range(upsample_factor // 2):
-            self.add_module('upsample' + str(i + 1), UpsampleBlock(64, 2))
+            self.add_module("upsample" + str(i + 1), UpsampleBlock(64, 2))
 
         # Third convolutional layer post upsampling blocks
         self.conv3 = nn.Conv2d(64, 3, kernel_size=9, stride=1, padding=4)
@@ -67,12 +67,12 @@ class Generator(nn.Module):
         cache = out.clone()
 
         for i in range(self.n_residual_blocks):
-            out = self.__getattr__('residual' + str(i + 1))(out)
+            out = self.__getattr__("residual" + str(i + 1))(out)
 
         out = self.conv2(out) + cache
 
         for i in range(self.upsample_factor // 2):
-            out = self.__getattr__('upsample' + str(i + 1))(out)
+            out = self.__getattr__("upsample" + str(i + 1))(out)
 
         out = self.conv3(out)
 
