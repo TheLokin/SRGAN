@@ -24,12 +24,12 @@ parser.add_argument("--input", type=str, metavar="N",
                     help="Folder with the input dataset images.")
 parser.add_argument("--target", type=str, metavar="N",
                     help="Folder with the target dataset images.")
-parser.add_argument("--epoch-psnr", type=int, default=10, metavar="N",
-                    help="The number of iterations is need in the training of PSNR model (default: 500).")
-parser.add_argument("--epoch", type=int, default=10, metavar="N",
-                    help="The number of iterations is need in the training of SRGAN model (default: 1000).")
+parser.add_argument("--epoch-psnr", type=int, default=100, metavar="N",
+                    help="The number of iterations is need in the training of PSNR model (default: 100).")
+parser.add_argument("--epoch", type=int, default=300, metavar="N",
+                    help="The number of iterations is need in the training of SRGAN model (default: 300).")
 parser.add_argument("--checkpoint", type=int, default=0, metavar="N",
-                    help="Continue with previous check point (default: 0).")
+                    help="Continue with previous check point in the training of SRGAN model (default: 0).")
 parser.add_argument("--output", type=bool, default=False, metavar="N",
                     help="Generate an output image every 5000 iterations (default: false).")
 opt = parser.parse_args()

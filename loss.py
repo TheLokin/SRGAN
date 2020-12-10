@@ -4,7 +4,6 @@ import torch.nn.functional as F
 
 from torch import nn, Tensor
 from torchvision.models import vgg19
-from torchvision.models.vgg import model_urls
 
 
 class ContentLoss(nn.Module):
@@ -63,8 +62,6 @@ class ContentLoss(nn.Module):
 
         super(ContentLoss, self).__init__()
 
-        model_urls["vgg19"] = model_urls["vgg19"].replace(
-            "https://", "http://")
         model = vgg19(pretrained=True)
         self.features = nn.Sequential(
             *list(model.features.children())[:feature_layer]).eval()
