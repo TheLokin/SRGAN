@@ -24,10 +24,12 @@ parser.add_argument("--input", type=str, metavar="N",
                     help="Folder with the input dataset images.")
 parser.add_argument("--target", type=str, metavar="N",
                     help="Folder with the target dataset images.")
-parser.add_argument("--epoch-psnr", type=int, default=100, metavar="N",
-                    help="The number of iterations is need in the training of PSNR model (default: 100).")
-parser.add_argument("--epoch", type=int, default=300, metavar="N",
-                    help="The number of iterations is need in the training of SRGAN model (default: 300).")
+parser.add_argument("--epoch-psnr", type=int, default=20, metavar="N",
+                    help="The number of iterations is need in the training of PSNR model (default: 20).")
+parser.add_argument("--checkpoint-psnr", type=int, default=0, metavar="N",
+                    help="Continue with previous check point in the training of PSNR model (default: 0).")
+parser.add_argument("--epoch", type=int, default=100, metavar="N",
+                    help="The number of iterations is need in the training of SRGAN model (default: 100).")
 parser.add_argument("--checkpoint", type=int, default=0, metavar="N",
                     help="Continue with previous check point in the training of SRGAN model (default: 0).")
 parser.add_argument("--output", type=bool, default=False, metavar="N",
@@ -35,20 +37,10 @@ parser.add_argument("--output", type=bool, default=False, metavar="N",
 opt = parser.parse_args()
 
 # Create the necessary folders
-for path in [os.path.join("weight", "SRResNet"),
-             os.path.join("weight", "SRGAN"),
-             os.path.join("output", str(opt.upscale_factor) +
-                          "x", "SRResNet", "lr"),
-             os.path.join("output", str(opt.upscale_factor) +
-                          "x", "SRResNet", "hr"),
-             os.path.join("output", str(opt.upscale_factor) +
-                          "x", "SRResNet", "sr"),
-             os.path.join("output", str(opt.upscale_factor) +
-                          "x", "SRGAN", "lr"),
-             os.path.join("output", str(opt.upscale_factor) +
-                          "x", "SRGAN", "hr"),
-             os.path.join("output", str(opt.upscale_factor) +
-                          "x", "SRGAN", "sr")]:
+for path in [os.path.join("weight", "SRResNet", str(opt.upscale_factor) + "x"),
+             os.path.join("weight", "SRGAN", str(opt.upscale_factor) + "x"),
+             os.path.join("output", "SRResNet", str(opt.upscale_factor) + "x"),
+             os.path.join("output", "SRGAN", str(opt.upscale_factor) + "x",)]:
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -81,19 +73,19 @@ netG.train()
 # Define PSNR model optimizer
 optimizer = torch.optim.Adam(netG.parameters())
 
-if opt.checkpoint > 0:
+if opt.checkpoint_psnr > 0:
     print("[*] Found PSNR pretrained model weights. Skip pre-train.")
 
     # Loading PSNR pre training model
-    load_checkpoint(netG, optimizer, os.path.join(
-        "weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x_checkpoint-" + str(opt.epoch_psnr) + ".pth"))
+    load_checkpoint(netG, optimizer, os.path.join("weight", "SRResNet", str(opt.upscale_factor) + "x",
+                                                  "SRResNet_" + str(opt.upscale_factor) + "x_checkpoint-" + str(opt.checkpoint_psnr) + ".pth"))
 else:
     try:
         # Pre-train generator using raw MSE loss
         print("[!] Not found pretrained weights. Start training PSNR model.")
 
         # Writer train PSNR model log
-        with open(os.path.join("output", str(opt.upscale_factor) + "x", "SRResNet_Loss.csv"), "w+") as file:
+        with open(os.path.join("weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x_Loss.csv"), "w+") as file:
             writer = csv.writer(file)
             writer.writerow(["Epoch", "MSE Loss"])
 
@@ -131,20 +123,21 @@ else:
                     total_iter = i + (epoch - 1) * len(dataloader)
                     if (total_iter + 1) % 5000 == 0:
                         utils.save_image(lr, os.path.join(
-                            "output", str(opt.upscale_factor) + "x", "SRResNet", "lr", "SRResNet_" + str(total_iter + 1) + ".bmp"))
+                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_lr_iter-" + str(total_iter + 1) + ".bmp"))
                         utils.save_image(hr, os.path.join(
-                            "output", str(opt.upscale_factor) + "x", "SRResNet", "hr", "SRResNet_" + str(total_iter + 1) + ".bmp"))
+                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_hr_iter-" + str(total_iter + 1) + ".bmp"))
                         utils.save_image(sr, os.path.join(
-                            "output", str(opt.upscale_factor) + "x", "SRResNet", "sr", "SRResNet_" + str(total_iter + 1) + ".bmp"))
+                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_sr_iter-" + str(total_iter + 1) + ".bmp"))
 
             # The model is saved every 1 epoch
             torch.save({"epoch": epoch,
                         "optimizer": optimizer.state_dict(),
                         "state_dict": netG.state_dict()
-                        }, os.path.join("weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
+                        }, os.path.join("weight", "SRResNet", str(opt.upscale_factor) + "x",
+                                        "SRResNet_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
 
             # Writer training log
-            with open(os.path.join("output", str(opt.upscale_factor) + "x", "SRResNet_Loss.csv"), "a+") as file:
+            with open(os.path.join("weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x_Loss.csv"), "a+") as file:
                 writer = csv.writer(file)
                 writer.writerow([epoch, avg_loss / len(dataloader)])
 
@@ -155,7 +148,8 @@ else:
         torch.save({"epoch": epoch,
                     "optimizer": optimizer.state_dict(),
                     "state_dict": netG.state_dict()
-                    }, os.path.join("weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
+                    }, os.path.join("weight", "SRResNet", str(opt.upscale_factor) + "x",
+                                    "SRResNet_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
         sys.exit()
 
 # Alternating training SRGAN network
@@ -168,14 +162,14 @@ schedulerG = optim.lr_scheduler.StepLR(
 
 # Loading SRGAN checkpoint
 if opt.checkpoint > 0:
-    load_checkpoint(netG, optimizerG, os.path.join(
-        "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x_checkpoint-" + str(opt.checkpoint) + ".pth"))
-    load_checkpoint(netD, optimizerD, os.path.join(
-        "weight", "SRGAN", "netD_" + str(opt.upscale_factor) + "x_checkpoint-" + str(opt.checkpoint) + ".pth"))
+    load_checkpoint(netG, optimizerG, os.path.join("weight", "SRGAN", str(opt.upscale_factor) + "x",
+                                                   "netG_" + str(opt.upscale_factor) + "x_checkpoint-" + str(opt.checkpoint) + ".pth"))
+    load_checkpoint(netD, optimizerD, os.path.join("weight", "SRGAN", str(opt.upscale_factor) + "x",
+                                                   "netD_" + str(opt.upscale_factor) + "x_checkpoint-" + str(opt.checkpoint) + ".pth"))
 
 # Writer train SRGAN model log
 if opt.checkpoint == 0:
-    with open(os.path.join("output", str(opt.upscale_factor) + "x", "SRGAN_Loss.csv"), "w+") as file:
+    with open(os.path.join("weight", "SRGAN", "SRGAN_" + str(opt.upscale_factor) + "x_Loss.csv"), "w+") as file:
         writer = csv.writer(file)
         writer.writerow(["Epoch", "D Loss", "G Loss"])
 
@@ -260,24 +254,26 @@ try:
                 total_iter = i + (epoch - 1) * len(dataloader)
                 if (total_iter + 1) % 5000 == 0:
                     utils.save_image(lr, os.path.join(
-                        "output", str(opt.upscale_factor) + "x", "SRGAN", "lr", "SRGAN_" + str(total_iter + 1) + ".bmp"))
+                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_lr_iter-" + str(total_iter + 1) + ".bmp"))
                     utils.save_image(hr, os.path.join(
-                        "output", str(opt.upscale_factor) + "x", "SRGAN", "hr", "SRGAN_" + str(total_iter + 1) + ".bmp"))
+                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_hr_iter-" + str(total_iter + 1) + ".bmp"))
                     utils.save_image(sr, os.path.join(
-                        "output", str(opt.upscale_factor) + "x", "SRGAN", "sr", "SRGAN_" + str(total_iter + 1) + ".bmp"))
+                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_sr_iter-" + str(total_iter + 1) + ".bmp"))
 
         # The model is saved every 1 epoch
         torch.save({"epoch": epoch,
                     "optimizer": optimizerD.state_dict(),
                     "state_dict": netD.state_dict()
-                    }, os.path.join("weight", "SRGAN", "netD_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
+                    }, os.path.join("weight", "SRGAN", str(opt.upscale_factor) + "x",
+                                    "netD_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
         torch.save({"epoch": epoch,
                     "optimizer": optimizerG.state_dict(),
                     "state_dict": netG.state_dict()
-                    }, os.path.join("weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
+                    }, os.path.join("weight", "SRGAN", str(opt.upscale_factor) + "x",
+                                    "netG_" + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
 
         # Writer training log
-        with open(os.path.join("output", str(opt.upscale_factor) + "x", "SRGAN_Loss.csv"), "a+") as file:
+        with open(os.path.join("weight", "SRGAN", "SRGAN_" + str(opt.upscale_factor) + "x_Loss.csv"), "a+") as file:
             writer = csv.writer(file)
             writer.writerow(
                 [epoch, d_avg_loss / len(dataloader), g_avg_loss / len(dataloader)])
@@ -288,9 +284,11 @@ except KeyboardInterrupt:
     torch.save({"epoch": epoch,
                 "optimizer": optimizerD.state_dict(),
                 "state_dict": netD.state_dict()
-                }, os.path.join("weight", "SRGAN", "netD_ " + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
+                }, os.path.join("weight", "SRGAN", str(opt.upscale_factor) + "x",
+                                "netD_ " + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
     torch.save({"epoch": epoch,
                 "optimizer": optimizerG.state_dict(),
                 "state_dict": netG.state_dict()
-                }, os.path.join("weight", "SRGAN", "netG_ " + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
+                }, os.path.join("weight", "SRGAN", str(opt.upscale_factor) + "x",
+                                "netG_ " + str(opt.upscale_factor) + "x_checkpoint-" + str(epoch) + ".pth"))
     sys.exit()
