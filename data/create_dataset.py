@@ -12,6 +12,8 @@ parser.add_argument("--dataset", type=str, metavar="N",
                     help="Folder with the dataset images.")
 parser.add_argument("--output", type=str, default=".", metavar="N",
                     help="Folder for the new dataset (default: .).")
+parser.add_argument("--split", type=bool, default=False, metavar="N",
+                    help="Split each image into four segments (default: false).")
 opt = parser.parse_args()
 
 # Create the necessary folders
@@ -46,6 +48,24 @@ for filename in tqdm(os.listdir(opt.dataset), desc="Generating images from datas
     cv2.imwrite(os.path.join(opt.output, "4x", "train", "target",
                              "preprocess" + str(number) + ".bmp"), img800)
     number += 1
+    if opt.split:
+        for split in split_image(img):
+            img200 = cv2.resize(split, (200, 200),
+                                interpolation=cv2.INTER_CUBIC)
+            img400 = cv2.resize(split, (400, 400),
+                                interpolation=cv2.INTER_CUBIC)
+            img800 = cv2.resize(split, (800, 800),
+                                interpolation=cv2.INTER_CUBIC)
+
+            cv2.imwrite(os.path.join(opt.output, "2x", "train", "input",
+                                     "preprocess" + str(number) + ".bmp"), img200)
+            cv2.imwrite(os.path.join(opt.output, "2x", "train", "target",
+                                     "preprocess" + str(number) + ".bmp"), img400)
+            cv2.imwrite(os.path.join(opt.output, "4x", "train", "input",
+                                     "preprocess" + str(number) + ".bmp"), img200)
+            cv2.imwrite(os.path.join(opt.output, "4x", "train", "target",
+                                     "preprocess" + str(number) + ".bmp"), img800)
+            number += 1
 
 split_dataset(os.path.join(opt.output, "2x"))
 split_dataset(os.path.join(opt.output, "4x"))
