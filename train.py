@@ -123,11 +123,11 @@ else:
                     total_iter = i + (epoch - 1) * len(dataloader)
                     if (total_iter + 1) % 5000 == 0:
                         utils.save_image(lr, os.path.join(
-                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_lr_iter-" + str(total_iter + 1) + ".bmp"))
+                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_iter-" + str(total_iter + 1) + "_lr.bmp"))
                         utils.save_image(hr, os.path.join(
-                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_hr_iter-" + str(total_iter + 1) + ".bmp"))
+                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_iter-" + str(total_iter + 1) + "_hr.bmp"))
                         utils.save_image(sr, os.path.join(
-                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_sr_iter-" + str(total_iter + 1) + ".bmp"))
+                            "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_iter-" + str(total_iter + 1) + "_sr.bmp"))
 
             # The model is saved every 1 epoch
             torch.save({"epoch": epoch,
@@ -153,12 +153,14 @@ else:
         sys.exit()
 
 # Alternating training SRGAN network
+step_size = int(((opt.checkpoint + opt.epoch) // len(dataloader)) // 2)
+
 optimizerD = optim.Adam(netD.parameters())
 optimizerG = optim.Adam(netG.parameters())
 schedulerD = optim.lr_scheduler.StepLR(
-    optimizerD, step_size=opt.epoch // 2, gamma=0.1)
+    optimizerD, step_size=step_size, gamma=0.1)
 schedulerG = optim.lr_scheduler.StepLR(
-    optimizerG, step_size=opt.epoch // 2, gamma=0.1)
+    optimizerG, step_size=step_size, gamma=0.1)
 
 # Loading SRGAN checkpoint
 if opt.checkpoint > 0:
@@ -188,8 +190,10 @@ try:
             hr = target.to(device)
 
             batch_size = lr.size(0)
-            real_label = torch.ones(batch_size, dtype=lr.dtype, device=device)
-            fake_label = torch.zeros(batch_size, dtype=lr.dtype, device=device)
+            real_label = torch.ones(
+                batch_size, dtype=lr.dtype, device=device)
+            fake_label = torch.zeros(
+                batch_size, dtype=lr.dtype, device=device)
 
             ###############################################################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z))) #
@@ -254,11 +258,11 @@ try:
                 total_iter = i + (epoch - 1) * len(dataloader)
                 if (total_iter + 1) % 5000 == 0:
                     utils.save_image(lr, os.path.join(
-                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_lr_iter-" + str(total_iter + 1) + ".bmp"))
+                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_iter-" + str(total_iter + 1) + "_lr.bmp"))
                     utils.save_image(hr, os.path.join(
-                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_hr_iter-" + str(total_iter + 1) + ".bmp"))
+                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_iter-" + str(total_iter + 1) + "_hr.bmp"))
                     utils.save_image(sr, os.path.join(
-                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_sr_iter-" + str(total_iter + 1) + ".bmp"))
+                        "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_iter-" + str(total_iter + 1) + "_sr.bmp"))
 
         # The model is saved every 1 epoch
         torch.save({"epoch": epoch,
