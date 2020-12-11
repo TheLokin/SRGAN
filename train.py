@@ -153,7 +153,7 @@ else:
         sys.exit()
 
 # Alternating training SRGAN network
-step_size = int(((opt.checkpoint + opt.epoch) // len(dataloader)) // 2)
+step_size = max(1, int((opt.checkpoint + opt.epoch) // len(dataloader)))
 
 optimizerD = optim.Adam(netD.parameters())
 optimizerG = optim.Adam(netG.parameters())
