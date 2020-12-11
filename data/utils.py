@@ -54,7 +54,7 @@ def remove_edges(img_source, threthold_low=7, threthold_high=180):
     return img[bottom:top, left:right, :]
 
 
-def crop_image(img_source):
+def crop_image(img_source, padding=10):
     if isinstance(img_source, str):
         img = cv2.imread(img_source)
     else:
@@ -93,7 +93,7 @@ def crop_image(img_source):
         temp_x = img[int(img.shape[0] / 2), :, :].sum(1)
         r = int((temp_x > temp_x.mean() / 12).sum() / 2)
 
-    l = 2 * r / np.sqrt(2)
+    l = 2 * (r - padding) / np.sqrt(2)
     bottom = y - int(l / 2)
     top = y + int(l / 2)
     left = x - int(l / 2)
@@ -102,7 +102,7 @@ def crop_image(img_source):
     return img[bottom:top, left:right, :]
 
 
-def split_image(img_source, row_number=9, col_number=9):
+def split_image(img_source, row_number=2, col_number=2):
     if isinstance(img_source, str):
         img = cv2.imread(img_source)
     else:

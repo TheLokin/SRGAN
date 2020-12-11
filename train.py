@@ -32,7 +32,7 @@ parser.add_argument("--epoch", type=int, default=100, metavar="N",
                     help="The number of iterations is need in the training of SRGAN model (default: 100).")
 parser.add_argument("--checkpoint", type=int, default=0, metavar="N",
                     help="Continue with previous check point in the training of SRGAN model (default: 0).")
-parser.add_argument("--output", type=bool, default=False, metavar="N",
+parser.add_argument("--output", type=bool, default=True, metavar="N",
                     help="Generate an output image every 5000 iterations (default: false).")
 opt = parser.parse_args()
 

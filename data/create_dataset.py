@@ -33,23 +33,19 @@ for filename in tqdm(os.listdir(opt.dataset), desc="Generating images from datas
     img = remove_edges(img)
     img = crop_image(img)
 
-    for split in split_image(img):
-        img = cv2.resize(split, (200, 200),
-                         interpolation=cv2.INTER_CUBIC)
-        img2x = cv2.resize(split, (400, 400),
-                           interpolation=cv2.INTER_CUBIC)
-        img4x = cv2.resize(split, (800, 800),
-                           interpolation=cv2.INTER_CUBIC)
+    img200 = cv2.resize(img, (200, 200), interpolation=cv2.INTER_CUBIC)
+    img400 = cv2.resize(img, (400, 400), interpolation=cv2.INTER_CUBIC)
+    img800 = cv2.resize(img, (800, 800), interpolation=cv2.INTER_CUBIC)
 
-        cv2.imwrite(os.path.join(opt.output, "2x", "train", "input",
-                                 "preprocess" + str(number) + ".bmp"), img)
-        cv2.imwrite(os.path.join(opt.output, "2x", "train", "target",
-                                 "preprocess" + str(number) + ".bmp"), img2x)
-        cv2.imwrite(os.path.join(opt.output, "4x", "train", "input",
-                                 "preprocess" + str(number) + ".bmp"), img)
-        cv2.imwrite(os.path.join(opt.output, "4x", "train", "target",
-                                 "preprocess" + str(number) + ".bmp"), img4x)
-        number += 1
+    cv2.imwrite(os.path.join(opt.output, "2x", "train", "input",
+                             "preprocess" + str(number) + ".bmp"), img200)
+    cv2.imwrite(os.path.join(opt.output, "2x", "train", "target",
+                             "preprocess" + str(number) + ".bmp"), img400)
+    cv2.imwrite(os.path.join(opt.output, "4x", "train", "input",
+                             "preprocess" + str(number) + ".bmp"), img200)
+    cv2.imwrite(os.path.join(opt.output, "4x", "train", "target",
+                             "preprocess" + str(number) + ".bmp"), img800)
+    number += 1
 
 split_dataset(os.path.join(opt.output, "2x"))
 split_dataset(os.path.join(opt.output, "4x"))
