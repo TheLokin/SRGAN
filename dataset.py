@@ -11,8 +11,6 @@ class DatasetFromFolder(Dataset):
         super(DatasetFromFolder, self).__init__()
 
         self.transforms = Compose([
-            RandomHorizontalFlip(),
-            RandomVerticalFlip(),
             ToTensor()
         ])
 
