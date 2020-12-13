@@ -54,7 +54,7 @@ def remove_edges(img_source, threthold_low=7, threthold_high=180):
     return img[bottom:top, left:right, :]
 
 
-def crop_image(img_source, padding=10):
+def crop_image(img_source):
     if isinstance(img_source, str):
         img = cv2.imread(img_source)
     else:
@@ -93,7 +93,7 @@ def crop_image(img_source, padding=10):
         temp_x = img[int(img.shape[0] / 2), :, :].sum(1)
         r = int((temp_x > temp_x.mean() / 12).sum() / 2)
 
-    l = 2 * (r - padding) / np.sqrt(2)
+    l = 2 * (r - 2) / np.sqrt(2)
     bottom = y - int(l / 2)
     top = y + int(l / 2)
     left = x - int(l / 2)
@@ -129,7 +129,5 @@ def split_dataset(dataset_dir):
 
         # Move the validation set to the specified location
         for filename in samples:
-            shutil.move(os.path.join(dataset_dir, "train", "input", filename),
-                        os.path.join(dataset_dir, "test", "input", filename))
-            shutil.move(os.path.join(dataset_dir, "train", "target", filename),
-                        os.path.join(dataset_dir, "test", "target", filename))
+            shutil.move(os.path.join(dataset_dir, "train", filename),
+                        os.path.join(dataset_dir, "test", filename))

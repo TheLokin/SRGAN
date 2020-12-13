@@ -7,7 +7,7 @@ __pycache__/
 .vscode
 
 # Local files
-data/2x
-data/4x
+data/train
+data/test
 data/dataset
 output

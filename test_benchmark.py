@@ -1,32 +1,27 @@
 import os
-import argparse
-
 import cv2
 import lpips
 import torch
+import argparse
 import torchvision.utils as utils
 
-from sewar.full_ref import mse, rmse, psnr, ssim, msssim
-
 from tqdm import tqdm
-from PIL import Image
 from models import Generator
 from dataset import DatasetFromFolder
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
+from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 
 parser = argparse.ArgumentParser(
-    description="Photo-Realistic Single Image Super-Resolution.")
-parser.add_argument("--upscale-factor", type=int, default=4, choices=[2, 4],
-                    help="Low to high resolution scaling factor. (default: 4).")
-parser.add_argument("--model-path", default="weight/SRGAN_4x.pth", type=str, metavar="PATH",
-                    help="Path to latest checkpoint for model. (default: 'weight/SRGAN_4x.pth').")
+    description="Photo-Realistic Single Image Super-Resolution Benchmark.")
+parser.add_argument("--dataset", type=str, metavar="N",
+                    help="Folder with the dataset images.")
+parser.add_argument("--crop-size", type=int, default=400, metavar="N",
+                    help="Crop size for the training images (default: 400).")
+parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
+                    help="Low to high resolution scaling factor (default: 2).")
 opt = parser.parse_args()
-
-# Create the necessary folders
-if not os.path.exists("test"):
-    os.makedirs("test")
 
 # Selection of appropriate treatment equipment
 if not torch.cuda.is_available():
@@ -35,13 +30,14 @@ else:
     device = "cuda:0"
 
 # Load dataset
-dataset = DatasetFromFolder(
-    f"data/{opt.upscale_factor}x/test/input", f"data/{opt.upscale_factor}x/test/target")
+dataset = DatasetFromFolder(opt.dataset, opt.crop_size, opt.upscale_factor)
 dataloader = DataLoader(dataset, pin_memory=True)
 
 # Construct SRGAN model
 model = Generator(16, opt.upscale_factor).to(device)
-model.load_state_dict(torch.load(opt.model_path, map_location=device))
+checkpoint = torch.load(os.path.join(
+    "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
+model.load_state_dict(checkpoint["model"])
 
 # Set model eval mode
 model.eval()
@@ -49,7 +45,7 @@ model.eval()
 # Reference sources from `https://github.com/richzhang/PerceptualSimilarity`
 lpips_loss = lpips.LPIPS(net="vgg").to(device)
 
-# Evaluate algorithm performance
+# Algorithm performance
 total_mse_value = [0, 0, 0, 0]
 total_rmse_value = [0, 0, 0, 0]
 total_psnr_value = [0, 0, 0, 0]
@@ -57,158 +53,67 @@ total_ssim_value = [0, 0, 0, 0]
 total_ms_ssim_value = [0, 0, 0, 0]
 total_lpips_value = [0, 0, 0, 0]
 
-size = 200 * opt.upscale_factor
-
 # Start evaluate model performance
-progress_bar = tqdm(enumerate(dataloader), total=len(dataloader))
-
-for i, (input, target) in progress_bar:
-    # Set model gradients to zero
+for _, (input, target) in tqdm(enumerate(dataloader), total=len(dataloader)):
     lr = input.to(device)
     hr = target.to(device)
 
     with torch.no_grad():
         sr = model(lr)
 
-    utils.save_image(lr, f"test/lr.bmp")
-    utils.save_image(sr, f"test/sr.bmp")
-    utils.save_image(hr, f"test/hr.bmp")
+    utils.save_image(lr, "lr.bmp")
+    utils.save_image(hr, "hr.bmp")
+    utils.save_image(sr, "sr.bmp")
+
+    lr_img = cv2.imread("lr.bmp")
+    hr_img = cv2.imread("hr.bmp")
 
     # Evaluate performance
-    lr_img = cv2.imread(f"test/lr.bmp")
-    src_img = cv2.imread(f"test/sr.bmp")
-    dst_img = cv2.imread(f"test/hr.bmp")
+    for i, (src_img, dst_img) in enumerate([
+        (cv2.imread("sr.bmp"), hr_img),
+        (cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
+                    interpolation=cv2.INTER_NEAREST), hr_img),
+        (cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
+                    interpolation=cv2.INTER_LINEAR), hr_img),
+        (cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
+                    interpolation=cv2.INTER_CUBIC), hr_img)
+    ]):
+        sr = ToTensor()(src_img).unsqueeze(0)
+        sr = hr.to(device)
 
-    # Raw high resolution image
-    mse_value = mse(src_img, dst_img)
-    rmse_value = rmse(src_img, dst_img)
-    psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
-    ms_ssim_value = msssim(src_img, dst_img)
-    lpips_value = lpips_loss(sr, hr)
+        mse_value = mse(src_img, dst_img)
+        rmse_value = rmse(src_img, dst_img)
+        psnr_value = psnr(src_img, dst_img)
+        ssim_value = ssim(src_img, dst_img)
+        ms_ssim_value = msssim(src_img, dst_img)
+        lpips_value = lpips_loss(sr, hr)
 
-    total_mse_value[0] += mse_value
-    total_rmse_value[0] += rmse_value
-    total_psnr_value[0] += psnr_value
-    total_ssim_value[0] += ssim_value[0]
-    total_ms_ssim_value[0] += ms_ssim_value.real
-    total_lpips_value[0] += lpips_value.item()
+        total_mse_value[i] += mse_value
+        total_rmse_value[i] += rmse_value
+        total_psnr_value[i] += psnr_value
+        total_ssim_value[i] += ssim_value[0]
+        total_ms_ssim_value[i] += ms_ssim_value.real
+        total_lpips_value[i] += lpips_value.item()
 
-    # Nearest neighbor interpolation
-    src_img = cv2.resize(lr_img, (size, size), interpolation=cv2.INTER_NEAREST)
-    sr = ToTensor()(src_img).unsqueeze(0)
-    sr = hr.to(device)
+    os.remove("lr.bmp")
+    os.remove("hr.bmp")
+    os.remove("sr.bmp")
 
-    mse_value = mse(src_img, dst_img)
-    rmse_value = rmse(src_img, dst_img)
-    psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
-    ms_ssim_value = msssim(src_img, dst_img)
-    lpips_value = lpips_loss(sr, hr)
+for i, title in enumerate(["raw high resolution image",
+                           "nearest neighbor interpolation",
+                           "bilinear interpolation",
+                           "bicubic interpolation"]):
+    avg_mse_value = total_mse_value[i] / len(dataloader)
+    avg_rmse_value = total_rmse_value[i] / len(dataloader)
+    avg_psnr_value = total_psnr_value[i] / len(dataloader)
+    avg_ssim_value = total_ssim_value[i] / len(dataloader)
+    avg_ms_ssim_value = total_ms_ssim_value[i] / len(dataloader)
+    avg_lpips_value = total_lpips_value[i] / len(dataloader)
 
-    total_mse_value[1] += mse_value
-    total_rmse_value[1] += rmse_value
-    total_psnr_value[1] += psnr_value
-    total_ssim_value[1] += ssim_value[0]
-    total_ms_ssim_value[1] += ms_ssim_value.real
-    total_lpips_value[1] += lpips_value.item()
-
-    # Bilinear interpolation
-    src_img = cv2.resize(lr_img, (size, size), interpolation=cv2.INTER_LINEAR)
-    sr = ToTensor()(src_img).unsqueeze(0)
-    sr = hr.to(device)
-
-    mse_value = mse(src_img, dst_img)
-    rmse_value = rmse(src_img, dst_img)
-    psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
-    ms_ssim_value = msssim(src_img, dst_img)
-    lpips_value = lpips_loss(sr, hr)
-
-    total_mse_value[2] += mse_value
-    total_rmse_value[2] += rmse_value
-    total_psnr_value[2] += psnr_value
-    total_ssim_value[2] += ssim_value[0]
-    total_ms_ssim_value[2] += ms_ssim_value.real
-    total_lpips_value[2] += lpips_value.item()
-
-    # Bicubic interpolation
-    src_img = cv2.resize(lr_img, (size, size), interpolation=cv2.INTER_CUBIC)
-    sr = ToTensor()(src_img).unsqueeze(0)
-    sr = hr.to(device)
-
-    mse_value = mse(src_img, dst_img)
-    rmse_value = rmse(src_img, dst_img)
-    psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
-    ms_ssim_value = msssim(src_img, dst_img)
-    lpips_value = lpips_loss(sr, hr)
-
-    total_mse_value[3] += mse_value
-    total_rmse_value[3] += rmse_value
-    total_psnr_value[3] += psnr_value
-    total_ssim_value[3] += ssim_value[0]
-    total_ms_ssim_value[3] += ms_ssim_value.real
-    total_lpips_value[3] += lpips_value.item()
-
-avg_mse_value = total_mse_value[0] / len(dataloader)
-avg_rmse_value = total_rmse_value[0] / len(dataloader)
-avg_psnr_value = total_psnr_value[0] / len(dataloader)
-avg_ssim_value = total_ssim_value[0] / len(dataloader)
-avg_ms_ssim_value = total_ms_ssim_value[0] / len(dataloader)
-avg_lpips_value = total_lpips_value[0] / len(dataloader)
-
-print("\n")
-print("==== Performance summary with raw high resolution image =====")
-print(f"Avg MSE: {avg_mse_value:.2f}\n"
-      f"Avg RMSE: {avg_rmse_value:.2f}\n"
-      f"Avg PSNR: {avg_psnr_value:.2f}\n"
-      f"Avg SSIM: {avg_ssim_value:.4f}\n"
-      f"Avg MS-SSIM: {avg_ms_ssim_value:.4f}\n"
-      f"Avg LPIPS: {avg_lpips_value:.4f}")
-
-avg_mse_value = total_mse_value[1] / len(dataloader)
-avg_rmse_value = total_rmse_value[1] / len(dataloader)
-avg_psnr_value = total_psnr_value[1] / len(dataloader)
-avg_ssim_value = total_ssim_value[1] / len(dataloader)
-avg_ms_ssim_value = total_ms_ssim_value[1] / len(dataloader)
-avg_lpips_value = total_lpips_value[1] / len(dataloader)
-
-print("== Performance summary with nearest neighbor interpolation ==")
-print(f"Avg MSE: {avg_mse_value:.2f}\n"
-      f"Avg RMSE: {avg_rmse_value:.2f}\n"
-      f"Avg PSNR: {avg_psnr_value:.2f}\n"
-      f"Avg SSIM: {avg_ssim_value:.4f}\n"
-      f"Avg MS-SSIM: {avg_ms_ssim_value:.4f}\n"
-      f"Avg LPIPS: {avg_lpips_value:.4f}")
-
-avg_mse_value = total_mse_value[2] / len(dataloader)
-avg_rmse_value = total_rmse_value[2] / len(dataloader)
-avg_psnr_value = total_psnr_value[2] / len(dataloader)
-avg_ssim_value = total_ssim_value[2] / len(dataloader)
-avg_ms_ssim_value = total_ms_ssim_value[2] / len(dataloader)
-avg_lpips_value = total_lpips_value[2] / len(dataloader)
-
-print("====== Performance summary with bilinear interpolation ======")
-print(f"Avg MSE: {avg_mse_value:.2f}\n"
-      f"Avg RMSE: {avg_rmse_value:.2f}\n"
-      f"Avg PSNR: {avg_psnr_value:.2f}\n"
-      f"Avg SSIM: {avg_ssim_value:.4f}\n"
-      f"Avg MS-SSIM: {avg_ms_ssim_value:.4f}\n"
-      f"Avg LPIPS: {avg_lpips_value:.4f}")
-
-avg_mse_value = total_mse_value[3] / len(dataloader)
-avg_rmse_value = total_rmse_value[3] / len(dataloader)
-avg_psnr_value = total_psnr_value[3] / len(dataloader)
-avg_ssim_value = total_ssim_value[3] / len(dataloader)
-avg_ms_ssim_value = total_ms_ssim_value[3] / len(dataloader)
-avg_lpips_value = total_lpips_value[3] / len(dataloader)
-
-print("====== Performance summary with bicubic interpolation =======")
-print(f"Avg MSE: {avg_mse_value:.2f}\n"
-      f"Avg RMSE: {avg_rmse_value:.2f}\n"
-      f"Avg PSNR: {avg_psnr_value:.2f}\n"
-      f"Avg SSIM: {avg_ssim_value:.4f}\n"
-      f"Avg MS-SSIM: {avg_ms_ssim_value:.4f}\n"
-      f"Avg LPIPS: {avg_lpips_value:.4f}")
-print("=========================== End =============================")
+    print("\n==== Performance summary with " + title + " =====" +
+          "Avg MSE: {:.2f}\n".format(avg_mse_value) +
+          "Avg RMSE: {:.2f}\n".format(avg_rmse_value) +
+          "Avg PSNR: {:.2f}\n".format(avg_psnr_value) +
+          "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
+          "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
+          "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))

@@ -1,29 +1,37 @@
 import os
+import torchvision.transforms as transforms
 
 from PIL import Image
-from utils import check_extension
 from torch.utils.data.dataset import Dataset
-from torchvision.transforms import Compose, RandomHorizontalFlip, RandomVerticalFlip, ToTensor
 
 
 class DatasetFromFolder(Dataset):
-    def __init__(self, input_dir, target_dir):
+    def __init__(self, dataset_dir, crop_size, upscale_factor):
         super(DatasetFromFolder, self).__init__()
 
-        self.transforms = Compose([
-            ToTensor()
+        crop_size -= crop_size % upscale_factor
+
+        self.hr_transform = transforms.Compose([
+            transforms.RandomCrop(crop_size),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ToTensor()
+        ])
+        self.lr_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(crop_size // upscale_factor,
+                              interpolation=Image.BICUBIC),
+            transforms.ToTensor()
         ])
 
-        self.input_filenames = [os.path.join(
-            input_dir, x) for x in os.listdir(input_dir) if check_extension(x)]
-        self.target_filenames = [os.path.join(
-            target_dir, x) for x in os.listdir(target_dir) if check_extension(x)]
+        self.dataset = [Image.open(os.path.join(dataset_dir, x))
+                        for x in os.listdir(dataset_dir)]
 
     def __getitem__(self, index):
-        lr_image = self.transforms(Image.open(self.input_filenames[index]))
-        hr_image = self.transforms(Image.open(self.target_filenames[index]))
+        hr_image = self.hr_transform(self.dataset[index])
+        lr_image = self.lr_transform(hr_image)
 
         return lr_image, hr_image
 
     def __len__(self):
-        return len(self.input_filenames)
+        return len(self.dataset)
