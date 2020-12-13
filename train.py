@@ -23,8 +23,8 @@ parser.add_argument("--crop-size", type=int, default=400, metavar="N",
                     help="Crop size for the training images (default: 400).")
 parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
                     help="Low to high resolution scaling factor (default: 2).")
-parser.add_argument("--epoch-psnr", type=int, default=500, metavar="N",
-                    help="The number of iterations is need in the training of PSNR model (default: 500).")
+parser.add_argument("--epoch-psnr", type=int, default=1000, metavar="N",
+                    help="The number of iterations is need in the training of PSNR model (default: 1000).")
 parser.add_argument("--epoch", type=int, default=5000, metavar="N",
                     help="The number of iterations is need in the training of SRGAN model (default: 5000).")
 opt = parser.parse_args()
@@ -147,7 +147,7 @@ checkpoint = load_checkpoint(netD, optimizerD, os.path.join(
     "weight", "SRGAN", "netD_" + str(opt.upscale_factor) + "x.pth"))
 
 # Writer train SRGAN model log
-if opt.checkpoint == 0:
+if checkpoint == 0:
     with open(os.path.join("weight", "SRGAN", "SRGAN_Loss_" + str(opt.upscale_factor) + "x.csv"), "w+") as file:
         writer = csv.writer(file)
         writer.writerow(["Epoch", "D Loss", "G Loss"])
