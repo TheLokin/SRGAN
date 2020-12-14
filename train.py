@@ -78,7 +78,7 @@ if checkpoint == 0:
         writer.writerow(["Epoch", "MSE Loss"])
 
 # Pre-train generator using raw MSE loss
-for epoch in range(checkpoint + 1, checkpoint + opt.epoch_psnr + 1):
+for epoch in range(checkpoint + 1, opt.epoch_psnr + 1):
     progress_bar = tqdm(enumerate(dataloader), total=len(dataloader))
     avg_loss = 0
 
@@ -153,7 +153,7 @@ if checkpoint == 0:
         writer.writerow(["Epoch", "D Loss", "G Loss"])
 
 # Train generator and discriminator
-for epoch in range(checkpoint + 1, checkpoint + opt.epoch + 1):
+for epoch in range(checkpoint + 1, opt.epoch + 1):
     progress_bar = tqdm(enumerate(dataloader), total=len(dataloader))
     g_avg_loss = 0
     d_avg_loss = 0

@@ -5,9 +5,3 @@ __pycache__/
 
 # Visual Studio Code
 .vscode
-
-# Local files
-data/train
-data/test
-data/dataset
-output

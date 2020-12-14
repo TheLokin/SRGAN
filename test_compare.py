@@ -14,7 +14,7 @@ from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 
 parser = argparse.ArgumentParser(
-    description="Photo-Realistic Single Image Super-Resolution Benchmark.")
+    description="Photo-Realistic Single Image Super-Resolution Comparation.")
 parser.add_argument("--dataset", type=str, metavar="N",
                     help="Folder with the dataset images.")
 opt = parser.parse_args()
