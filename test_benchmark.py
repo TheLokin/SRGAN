@@ -110,7 +110,7 @@ for i, title in enumerate(["raw high resolution image",
     avg_ms_ssim_value = total_ms_ssim_value[i] / len(dataloader)
     avg_lpips_value = total_lpips_value[i] / len(dataloader)
 
-    print("\n==== Performance summary with " + title + " =====" +
+    print("\n=== Performance summary with " + title + " (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
           "Avg MSE: {:.2f}\n".format(avg_mse_value) +
           "Avg RMSE: {:.2f}\n".format(avg_rmse_value) +
           "Avg PSNR: {:.2f}\n".format(avg_psnr_value) +

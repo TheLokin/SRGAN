@@ -35,3 +35,24 @@ class DatasetFromFolder(Dataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+class DatasetCompareFromFolder(Dataset):
+    def __init__(self, dataset_dir, crop_size):
+        super(DatasetCompareFromFolder, self).__init__()
+
+        self.transform = transforms.Compose([
+            transforms.RandomCrop(crop_size),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ToTensor()
+        ])
+
+        self.dataset = [Image.open(os.path.join(dataset_dir, x))
+                        for x in os.listdir(dataset_dir)]
+
+    def __getitem__(self, index):
+        return self.transform(self.dataset[index])
+
+    def __len__(self):
+        return len(self.dataset)
