@@ -24,8 +24,8 @@ parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
 opt = parser.parse_args()
 
 # Create the necessary folders
-if not os.path.exists("test"):
-    os.makedirs("test")
+if not os.path.exists(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x")):
+    os.makedirs(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x"))
 
 # Selection of appropriate treatment equipment
 if not torch.cuda.is_available():
@@ -41,6 +41,7 @@ dataloader = DataLoader(dataset, pin_memory=True)
 model = Generator(16, opt.upscale_factor).to(device)
 checkpoint = torch.load(os.path.join(
     "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
+
 model.load_state_dict(checkpoint["model"])
 
 # Set model eval mode
@@ -66,13 +67,19 @@ for i, (input, target) in progress_bar:
     with torch.no_grad():
         sr = model(lr)
 
-    utils.save_image(lr, os.path.join("test", str(i) + "_lr.bmp"))
-    utils.save_image(hr, os.path.join("test", str(i) + "_hr.bmp"))
-    utils.save_image(sr, os.path.join("test", str(i) + "_sr.bmp"))
+    utils.save_image(lr, os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
+    utils.save_image(hr, os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
+    utils.save_image(sr, os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
-    lr_img = cv2.imread(os.path.join("test", str(i) + "_lr.bmp"))
-    dst_img = cv2.imread(os.path.join("test", str(i) + "_hr.bmp"))
-    src_img = cv2.imread(os.path.join("test", str(i) + "_sr.bmp"))
+    lr_img = cv2.imread(os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
+    dst_img = cv2.imread(os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
+    src_img = cv2.imread(os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)
@@ -90,6 +97,8 @@ for i, (input, target) in progress_bar:
 
     sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                     interpolation=cv2.INTER_NEAREST)
+    cv2.imwrite(os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_nn.bmp"), sr)
     sr = transforms.ToTensor()(sr).unsqueeze(0)
     sr = sr.to(device)
 
@@ -109,6 +118,8 @@ for i, (input, target) in progress_bar:
 
     sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                     interpolation=cv2.INTER_LINEAR)
+    cv2.imwrite(os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bl.bmp"), sr)
     sr = transforms.ToTensor()(sr).unsqueeze(0)
     sr = sr.to(device)
 
@@ -128,6 +139,8 @@ for i, (input, target) in progress_bar:
 
     sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                     interpolation=cv2.INTER_CUBIC)
+    cv2.imwrite(os.path.join("test", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bc.bmp"), sr)
     sr = transforms.ToTensor()(sr).unsqueeze(0)
     sr = sr.to(device)
 
@@ -155,10 +168,10 @@ avg_ssim_value = total_ssim_value[0] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[0] / len(dataloader)
 avg_lpips_value = total_lpips_value[0] / len(dataloader)
 
-print("\n=== Performance summary with raw high resolution image (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.2f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.2f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.2f}\n".format(avg_psnr_value) +
+print("\n=== Performance summary SRGAN (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
+      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
+      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
+      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
@@ -170,10 +183,10 @@ avg_ssim_value = total_ssim_value[1] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[1] / len(dataloader)
 avg_lpips_value = total_lpips_value[1] / len(dataloader)
 
-print("\n=== Performance summary with nearest neighbor interpolation (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.2f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.2f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.2f}\n".format(avg_psnr_value) +
+print("\n=== Performance summary nearest neighbor (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
+      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
+      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
+      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
@@ -185,10 +198,10 @@ avg_ssim_value = total_ssim_value[2] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[2] / len(dataloader)
 avg_lpips_value = total_lpips_value[2] / len(dataloader)
 
-print("\n=== Performance summary with bilinear interpolation (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.2f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.2f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.2f}\n".format(avg_psnr_value) +
+print("\n=== Performance summary bilinear (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
+      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
+      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
+      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
@@ -200,10 +213,10 @@ avg_ssim_value = total_ssim_value[3] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[3] / len(dataloader)
 avg_lpips_value = total_lpips_value[3] / len(dataloader)
 
-print("\n=== Performance summary with bicubic interpolation (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.2f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.2f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.2f}\n".format(avg_psnr_value) +
+print("\n=== Performance summary bicubic (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
+      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
+      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
+      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
