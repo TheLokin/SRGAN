@@ -90,6 +90,9 @@ for i, (input, target) in progress_bar:
     total_ms_ssim_value += ms_ssim_value.real
     total_lpips_value += lpips_value.item()
 
+    progress_bar.set_description(
+        "[" + str(i + 1) + "/" + str(len(dataloader)) + "]")
+
 avg_mse_value = total_mse_value / len(dataloader)
 avg_rmse_value = total_rmse_value / len(dataloader)
 avg_psnr_value = total_psnr_value / len(dataloader)
@@ -103,4 +106,4 @@ print("\n=== Performance summary (upsampling x2x2 vs upsampling x4)\n" +
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
+      "Avg LPIPS: {:.4f}".format(avg_lpips_value))

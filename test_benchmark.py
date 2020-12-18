@@ -95,11 +95,11 @@ for i, (input, target) in progress_bar:
     total_ms_ssim_value[0] += ms_ssim_value.real
     total_lpips_value[0] += lpips_value.item()
 
-    sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
-                    interpolation=cv2.INTER_NEAREST)
+    src_img = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
+                         interpolation=cv2.INTER_NEAREST)
     cv2.imwrite(os.path.join("test", "SRGAN", str(
-        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_nn.bmp"), sr)
-    sr = transforms.ToTensor()(sr).unsqueeze(0)
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_nn.bmp"), src_img)
+    sr = transforms.ToTensor()(src_img).unsqueeze(0)
     sr = sr.to(device)
 
     mse_value = mse(src_img, dst_img)
@@ -116,11 +116,11 @@ for i, (input, target) in progress_bar:
     total_ms_ssim_value[1] += ms_ssim_value.real
     total_lpips_value[1] += lpips_value.item()
 
-    sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
-                    interpolation=cv2.INTER_LINEAR)
+    src_img = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
+                         interpolation=cv2.INTER_LINEAR)
     cv2.imwrite(os.path.join("test", "SRGAN", str(
-        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bl.bmp"), sr)
-    sr = transforms.ToTensor()(sr).unsqueeze(0)
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bl.bmp"), src_img)
+    sr = transforms.ToTensor()(src_img).unsqueeze(0)
     sr = sr.to(device)
 
     mse_value = mse(src_img, dst_img)
@@ -137,11 +137,11 @@ for i, (input, target) in progress_bar:
     total_ms_ssim_value[2] += ms_ssim_value.real
     total_lpips_value[2] += lpips_value.item()
 
-    sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
-                    interpolation=cv2.INTER_CUBIC)
+    src_img = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
+                         interpolation=cv2.INTER_CUBIC)
     cv2.imwrite(os.path.join("test", "SRGAN", str(
-        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bc.bmp"), sr)
-    sr = transforms.ToTensor()(sr).unsqueeze(0)
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bc.bmp"), src_img)
+    sr = transforms.ToTensor()(src_img).unsqueeze(0)
     sr = sr.to(device)
 
     mse_value = mse(src_img, dst_img)
@@ -159,7 +159,7 @@ for i, (input, target) in progress_bar:
     total_lpips_value[3] += lpips_value.item()
 
     progress_bar.set_description(
-        "[" + str(i + 1) + "/ " + str(len(dataloader)) + "]")
+        "[" + str(i + 1) + "/" + str(len(dataloader)) + "]")
 
 avg_mse_value = total_mse_value[0] / len(dataloader)
 avg_rmse_value = total_rmse_value[0] / len(dataloader)
@@ -174,7 +174,7 @@ print("\n=== Performance summary SRGAN (upsampling x" + str(opt.upscale_factor) 
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
+      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
 avg_mse_value = total_mse_value[1] / len(dataloader)
 avg_rmse_value = total_rmse_value[1] / len(dataloader)
@@ -189,7 +189,7 @@ print("\n=== Performance summary nearest neighbor (upsampling x" + str(opt.upsca
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
+      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
 avg_mse_value = total_mse_value[2] / len(dataloader)
 avg_rmse_value = total_rmse_value[2] / len(dataloader)
@@ -204,7 +204,7 @@ print("\n=== Performance summary bilinear (upsampling x" + str(opt.upscale_facto
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
+      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
 avg_mse_value = total_mse_value[3] / len(dataloader)
 avg_rmse_value = total_rmse_value[3] / len(dataloader)
@@ -219,4 +219,4 @@ print("\n=== Performance summary bicubic (upsampling x" + str(opt.upscale_factor
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}\n".format(avg_lpips_value))
+      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
