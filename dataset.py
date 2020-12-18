@@ -58,7 +58,7 @@ class TestDatasetFromFolder(Dataset):
 
     def __getitem__(self, index):
         hr_image = self.hr_transform(self.dataset[index])
-        lr_image = self.lr_transform(hr_image)
+        lr_image = self.lr_transform(self.dataset[index])
 
         return lr_image, hr_image
 
