@@ -7,8 +7,8 @@ import torchvision.utils as utils
 
 from tqdm import tqdm
 from models import Generator
-from dataset import DatasetFromFolder
 from torch.utils.data import DataLoader
+from dataset import TestDatasetFromFolder
 from torchvision.transforms import ToTensor
 from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
@@ -30,7 +30,7 @@ else:
     device = "cuda:0"
 
 # Load dataset
-dataset = DatasetFromFolder(opt.dataset, 800, 4)
+dataset = TestDatasetFromFolder(opt.dataset, 800, 4)
 dataloader = DataLoader(dataset, pin_memory=True)
 
 # Construct SRGAN model

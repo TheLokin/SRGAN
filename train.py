@@ -10,8 +10,8 @@ import torchvision.utils as utils
 from tqdm import tqdm
 from loss import ContentLoss
 from utils import load_checkpoint
-from dataset import DatasetFromFolder
 from torch.utils.data import DataLoader
+from dataset import TrainDatasetFromFolder
 from models import Generator, Discriminator
 
 
@@ -45,7 +45,8 @@ else:
     device = "cuda:0"
 
 # Load dataset
-dataset = DatasetFromFolder(opt.dataset, opt.crop_size, opt.upscale_factor)
+dataset = TrainDatasetFromFolder(
+    opt.dataset, opt.crop_size, opt.upscale_factor)
 dataloader = DataLoader(dataset, pin_memory=True)
 
 # Construct network architecture model of generator and discriminator
