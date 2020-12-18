@@ -17,6 +17,7 @@ parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
 parser.add_argument("--crop-size", type=int, default=400, metavar="N",
                     help="Crop size for the training images (default: 400).")
 opt = parser.parse_args()
+
 # Create the necessary folders
 if not os.path.exists("test"):
     os.makedirs("test")
