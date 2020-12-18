@@ -63,18 +63,18 @@ for i, (input, target) in progress_bar:
         sr = model(model(lr))
 
     utils.save_image(lr, os.path.join(
-        "test", "2x2x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
+        "test", "SRGAN", "2x2x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
     utils.save_image(hr, os.path.join(
-        "test", "2x2x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
+        "test", "SRGAN", "2x2x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
     utils.save_image(sr, os.path.join(
-        "test", "2x2x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
+        "test", "SRGAN", "2x2x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
     lr_img = cv2.imread(os.path.join(
-        "test", "2x2x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
+        "test", "SRGAN", "2x2x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
     dst_img = cv2.imread(os.path.join(
-        "test", "2x2x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
+        "test", "SRGAN", "2x2x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
     src_img = cv2.imread(os.path.join(
-        "test", "2x2x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
+        "test", "SRGAN", "2x2x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)

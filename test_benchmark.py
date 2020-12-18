@@ -67,18 +67,18 @@ for i, (input, target) in progress_bar:
     with torch.no_grad():
         sr = model(lr)
 
-    utils.save_image(lr, os.path.join("test", str(
+    utils.save_image(lr, os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
-    utils.save_image(hr, os.path.join("test", str(
+    utils.save_image(hr, os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
-    utils.save_image(sr, os.path.join("test", str(
+    utils.save_image(sr, os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
-    lr_img = cv2.imread(os.path.join("test", str(
+    lr_img = cv2.imread(os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
-    dst_img = cv2.imread(os.path.join("test", str(
+    dst_img = cv2.imread(os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
-    src_img = cv2.imread(os.path.join("test", str(
+    src_img = cv2.imread(os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
     mse_value = mse(src_img, dst_img)
@@ -97,7 +97,7 @@ for i, (input, target) in progress_bar:
 
     sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                     interpolation=cv2.INTER_NEAREST)
-    cv2.imwrite(os.path.join("test", str(
+    cv2.imwrite(os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_nn.bmp"), sr)
     sr = transforms.ToTensor()(sr).unsqueeze(0)
     sr = sr.to(device)
@@ -118,7 +118,7 @@ for i, (input, target) in progress_bar:
 
     sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                     interpolation=cv2.INTER_LINEAR)
-    cv2.imwrite(os.path.join("test", str(
+    cv2.imwrite(os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bl.bmp"), sr)
     sr = transforms.ToTensor()(sr).unsqueeze(0)
     sr = sr.to(device)
@@ -139,7 +139,7 @@ for i, (input, target) in progress_bar:
 
     sr = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                     interpolation=cv2.INTER_CUBIC)
-    cv2.imwrite(os.path.join("test", str(
+    cv2.imwrite(os.path.join("test", "SRGAN", str(
         opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bc.bmp"), sr)
     sr = transforms.ToTensor()(sr).unsqueeze(0)
     sr = sr.to(device)
