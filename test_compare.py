@@ -9,7 +9,6 @@ from tqdm import tqdm
 from models import Generator
 from torch.utils.data import DataLoader
 from dataset import TestDatasetFromFolder
-from torchvision.transforms import ToTensor
 from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 

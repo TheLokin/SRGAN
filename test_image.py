@@ -1,4 +1,6 @@
 import os
+import cv2
+import lpips
 import torch
 import argparse
 import torchvision.utils as utils
@@ -6,16 +8,17 @@ import torchvision.transforms as transforms
 
 from PIL import Image
 from models import Generator
+from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 
 parser = argparse.ArgumentParser(
     description="Photo-Realistic Single Image Super-Resolution Test.")
-parser.add_argument("--image", type=str, metavar="N",
-                    help="Image to apply super-resolution.")
+parser.add_argument("--lr-image", type=str, metavar="N",
+                    help="Low resolution image.")
+parser.add_argument("--hr-image", type=str, metavar="N",
+                    help="High resolution image.")
 parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
                     help="Low to high resolution scaling factor (default: 2).")
-parser.add_argument("--crop-size", type=int, default=400, metavar="N",
-                    help="Crop size for the training images (default: 400).")
 opt = parser.parse_args()
 
 # Create the necessary folders
@@ -37,15 +40,35 @@ model.load_state_dict(checkpoint["model"])
 # Set model eval mode
 model.eval()
 
-lr = Image.open(opt.image)
-opt.crop_size -= opt.crop_size % opt.upscale_factor
-lr = transforms.Resize(opt.crop_size // opt.upscale_factor,
-                       interpolation=Image.BICUBIC)(lr)
-lr = transforms.ToTensor()(lr)
-lr = lr.unsqueeze(0)
+# Reference sources from `https://github.com/richzhang/PerceptualSimilarity`
+lpips_loss = lpips.LPIPS(net="vgg").to(device)
+
+lr = Image.open(opt.lr_image)
+hr = Image.open(opt.hr_image)
+lr = transforms.ToTensor()(lr).unsqueeze(0)
+hr = transforms.ToTensor()(hr).unsqueeze(0)
 lr = lr.to(device)
+hr = hr.to(device)
 
 with torch.no_grad():
     sr = model(lr)
 
-utils.save_image(sr, os.path.join("test", "sr.bmp"))
+utils.save_image(sr, os.path.join("test", "SRGAN_sr.bmp"))
+
+dst_img = cv2.imread(opt.hr_image)
+src_img = cv2.imread(os.path.join("test", "SRGAN_sr.bmp"))
+
+mse_value = mse(src_img, dst_img)
+rmse_value = rmse(src_img, dst_img)
+psnr_value = psnr(src_img, dst_img)
+ssim_value = ssim(src_img, dst_img)[0]
+ms_ssim_value = msssim(src_img, dst_img).real
+lpips_value = lpips_loss(sr, hr).item()
+
+print("\n=== Performance summary (upsampling x2x2 vs upsampling x4)\n" +
+      "Avg MSE: {:.4f}\n".format(mse_value) +
+      "Avg RMSE: {:.4f}\n".format(rmse_value) +
+      "Avg PSNR: {:.4f}\n".format(psnr_value) +
+      "Avg SSIM: {:.4f}\n".format(ssim_value) +
+      "Avg MS-SSIM: {:.4f}\n".format(ms_ssim_value) +
+      "Avg LPIPS: {:.4f}".format(lpips_value))

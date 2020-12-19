@@ -10,3 +10,5 @@ __pycache__/
 /output
 /weight/SRGAN/2x
 /weight/SRGAN/4x
+/test/SRGAN
+/test/SRResNet
