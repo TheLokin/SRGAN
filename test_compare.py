@@ -99,7 +99,7 @@ avg_ssim_value = total_ssim_value / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value / len(dataloader)
 avg_lpips_value = total_lpips_value / len(dataloader)
 
-print("\n=== Performance summary (upsampling x2x2 vs upsampling x4)\n" +
+print("\n=== Performance summary (upsampling x2x2)\n" +
       "Avg MSE: {:.4f}\n".format(avg_mse_value) +
       "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
