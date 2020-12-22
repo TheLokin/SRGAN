@@ -17,12 +17,6 @@ parser.add_argument("--lr-image", type=str, metavar="N",
                     help="Low resolution image.")
 parser.add_argument("--hr-image", type=str, metavar="N",
                     help="High resolution image.")
-parser.add_argument("--nn-image", type=str, metavar="N",
-                    help="Nearest neighbor interpolation image.")
-parser.add_argument("--bl-image", type=str, metavar="N",
-                    help="Bilinear interpolation image.")
-parser.add_argument("--bc-image", type=str, metavar="N",
-                    help="Bicubic interpolation image.")
 parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
                     help="Low to high resolution scaling factor (default: 2).")
 opt = parser.parse_args()
@@ -78,63 +72,3 @@ print("\n=== Performance summary\n" +
       "Avg SSIM: {:.4f}\n".format(ssim_value) +
       "Avg MS-SSIM: {:.4f}\n".format(ms_ssim_value) +
       "Avg LPIPS: {:.4f}".format(lpips_value))
-
-if os.path.exists(opt.nn_image):
-    src_img = cv2.imread(opt.nn_image)
-    sr = transforms.ToTensor()(src_img).unsqueeze(0)
-    sr = sr.to(device)
-
-    mse_value = mse(src_img, dst_img)
-    rmse_value = rmse(src_img, dst_img)
-    psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)[0]
-    ms_ssim_value = msssim(src_img, dst_img).real
-    lpips_value = lpips_loss(sr, hr).item()
-
-    print("\n=== Performance summary nearest neighbor (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-          "Avg MSE: {:.4f}\n".format(mse_value) +
-          "Avg RMSE: {:.4f}\n".format(rmse_value) +
-          "Avg PSNR: {:.4f}\n".format(psnr_value) +
-          "Avg SSIM: {:.4f}\n".format(ssim_value) +
-          "Avg MS-SSIM: {:.4f}\n".format(ms_ssim_value) +
-          "Avg LPIPS: {:.4f}".format(lpips_value))
-
-if os.path.exists(opt.bl_image):
-    src_img = cv2.imread(opt.bl_image)
-    sr = transforms.ToTensor()(src_img).unsqueeze(0)
-    sr = sr.to(device)
-
-    mse_value = mse(src_img, dst_img)
-    rmse_value = rmse(src_img, dst_img)
-    psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)[0]
-    ms_ssim_value = msssim(src_img, dst_img).real
-    lpips_value = lpips_loss(sr, hr).item()
-
-    print("\n=== Performance summary bilinear (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-          "Avg MSE: {:.4f}\n".format(mse_value) +
-          "Avg RMSE: {:.4f}\n".format(rmse_value) +
-          "Avg PSNR: {:.4f}\n".format(psnr_value) +
-          "Avg SSIM: {:.4f}\n".format(ssim_value) +
-          "Avg MS-SSIM: {:.4f}\n".format(ms_ssim_value) +
-          "Avg LPIPS: {:.4f}".format(lpips_value))
-
-if os.path.exists(opt.bc_image):
-    src_img = cv2.imread(opt.bc_image)
-    sr = transforms.ToTensor()(src_img).unsqueeze(0)
-    sr = sr.to(device)
-
-    mse_value = mse(src_img, dst_img)
-    rmse_value = rmse(src_img, dst_img)
-    psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)[0]
-    ms_ssim_value = msssim(src_img, dst_img).real
-    lpips_value = lpips_loss(sr, hr).item()
-
-    print("\n=== Performance summary bicubic (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-          "Avg MSE: {:.4f}\n".format(mse_value) +
-          "Avg RMSE: {:.4f}\n".format(rmse_value) +
-          "Avg PSNR: {:.4f}\n".format(psnr_value) +
-          "Avg SSIM: {:.4f}\n".format(ssim_value) +
-          "Avg MS-SSIM: {:.4f}\n".format(ms_ssim_value) +
-          "Avg LPIPS: {:.4f}".format(lpips_value))
