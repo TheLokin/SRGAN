@@ -4,6 +4,7 @@ import lpips
 import torch
 import argparse
 import torchvision.utils as utils
+import torchvision.transforms as transforms
 
 from tqdm import tqdm
 from models import Generator
