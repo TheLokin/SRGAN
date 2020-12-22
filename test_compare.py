@@ -34,7 +34,8 @@ else:
     device = "cuda:0"
 
 # Load dataset
-dataset = TestDatasetFromFolder(opt.dataset, opt.crop_size, opt.upscale_factor)
+dataset = TestDatasetFromFolder(
+    opt.dataset, 2 * opt.crop_size, 2 * opt.upscale_factor)
 dataloader = DataLoader(dataset, pin_memory=True)
 
 # Construct SRGAN model
