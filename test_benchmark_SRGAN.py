@@ -15,8 +15,6 @@ from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 parser = argparse.ArgumentParser(
     description="Photo-Realistic Single Image Super-Resolution Benchmark.")
-parser.add_argument("--srgan", type=bool, default=True, metavar="N",
-                    help="Test with SRGAN (default: True).")
 parser.add_argument("--dataset", type=str, metavar="N",
                     help="Folder with the dataset images.")
 parser.add_argument("--crop-size", type=int, default=400, metavar="N",
@@ -26,14 +24,8 @@ parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
 opt = parser.parse_args()
 
 # Create the necessary folders
-if opt.srgan:
-    if not os.path.exists(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x")):
-        os.makedirs(os.path.join("test", "SRGAN",
-                                 str(opt.upscale_factor) + "x"))
-else:
-    if not os.path.exists(os.path.join("test", "SRResNet", str(opt.upscale_factor) + "x")):
-        os.makedirs(os.path.join("test", "SRResNet",
-                                 str(opt.upscale_factor) + "x"))
+if not os.path.exists(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x")):
+    os.makedirs(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x"))
 
 # Selection of appropriate treatment equipment
 if not torch.cuda.is_available():
@@ -47,13 +39,8 @@ dataloader = DataLoader(dataset, pin_memory=True)
 
 # Construct SRGAN model
 model = Generator(16, opt.upscale_factor).to(device)
-if opt.srgan:
-    checkpoint = torch.load(os.path.join(
-        "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
-else:
-    checkpoint = torch.load(os.path.join(
-        "weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
-
+checkpoint = torch.load(os.path.join(
+    "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
 model.load_state_dict(checkpoint["model"])
 
 # Set model eval mode
@@ -79,34 +66,19 @@ for i, (input, target) in progress_bar:
     with torch.no_grad():
         sr = model(lr)
 
-    if opt.srgan:
-        utils.save_image(lr, os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
-        utils.save_image(hr, os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
-        utils.save_image(sr, os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
+    utils.save_image(lr, os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
+    utils.save_image(hr, os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
+    utils.save_image(sr, os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
-        lr_img = cv2.imread(os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
-        dst_img = cv2.imread(os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
-        src_img = cv2.imread(os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
-    else:
-        utils.save_image(lr, os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_lr.bmp"))
-        utils.save_image(hr, os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_hr.bmp"))
-        utils.save_image(sr, os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_sr.bmp"))
-
-        lr_img = cv2.imread(os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_lr.bmp"))
-        dst_img = cv2.imread(os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_hr.bmp"))
-        src_img = cv2.imread(os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_sr.bmp"))
+    lr_img = cv2.imread(os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_lr.bmp"))
+    dst_img = cv2.imread(os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_hr.bmp"))
+    src_img = cv2.imread(os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_sr.bmp"))
 
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)
@@ -125,12 +97,8 @@ for i, (input, target) in progress_bar:
     src_img = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                          interpolation=cv2.INTER_NEAREST)
 
-    if opt.srgan:
-        cv2.imwrite(os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_nn.bmp"), src_img)
-    else:
-        cv2.imwrite(os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_nn.bmp"), src_img)
+    cv2.imwrite(os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_nn.bmp"), src_img)
 
     sr = transforms.ToTensor()(src_img).unsqueeze(0)
     sr = sr.to(device)
@@ -152,12 +120,8 @@ for i, (input, target) in progress_bar:
     src_img = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                          interpolation=cv2.INTER_LINEAR)
 
-    if opt.srgan:
-        cv2.imwrite(os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bl.bmp"), src_img)
-    else:
-        cv2.imwrite(os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_bl.bmp"), src_img)
+    cv2.imwrite(os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bl.bmp"), src_img)
 
     sr = transforms.ToTensor()(src_img).unsqueeze(0)
     sr = sr.to(device)
@@ -179,12 +143,8 @@ for i, (input, target) in progress_bar:
     src_img = cv2.resize(lr_img, (opt.crop_size, opt.crop_size),
                          interpolation=cv2.INTER_CUBIC)
 
-    if opt.srgan:
-        cv2.imwrite(os.path.join("test", "SRGAN", str(
-            opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bc.bmp"), src_img)
-    else:
-        cv2.imwrite(os.path.join("test", "SRResNet", str(
-            opt.upscale_factor) + "x", "SRResNet_" + str(i + 1) + "_bc.bmp"), src_img)
+    cv2.imwrite(os.path.join("test", "SRGAN", str(
+        opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bc.bmp"), src_img)
 
     sr = transforms.ToTensor()(src_img).unsqueeze(0)
     sr = sr.to(device)
@@ -213,22 +173,13 @@ avg_ssim_value = total_ssim_value[0] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[0] / len(dataloader)
 avg_lpips_value = total_lpips_value[0] / len(dataloader)
 
-if opt.srgan:
-    print("\n=== Performance summary SRGAN (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-          "Avg MSE: {:.4f}\n".format(avg_mse_value) +
-          "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
-          "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
-          "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
-          "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-          "Avg LPIPS: {:.4f}".format(avg_lpips_value))
-else:
-    print("\n=== Performance summary SRResNet (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-          "Avg MSE: {:.4f}\n".format(avg_mse_value) +
-          "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
-          "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
-          "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
-          "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-          "Avg LPIPS: {:.4f}".format(avg_lpips_value))
+print("\n=== Performance summary SRGAN (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
+      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
+      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
+      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
+      "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
+      "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
+      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
 avg_mse_value = total_mse_value[1] / len(dataloader)
 avg_rmse_value = total_rmse_value[1] / len(dataloader)
@@ -238,12 +189,12 @@ avg_ms_ssim_value = total_ms_ssim_value[1] / len(dataloader)
 avg_lpips_value = total_lpips_value[1] / len(dataloader)
 
 print("\n=== Performance summary nearest neighbor (upsampling x" + str(opt.upscale_factor) + ")" + "\n" +
-        "Avg MSE: {:.4f}\n".format(avg_mse_value) +
-        "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
-        "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
-        "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
-        "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-        "Avg LPIPS: {:.4f}".format(avg_lpips_value))
+      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
+      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
+      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
+      "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
+      "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
+      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
 avg_mse_value = total_mse_value[2] / len(dataloader)
 avg_rmse_value = total_rmse_value[2] / len(dataloader)
