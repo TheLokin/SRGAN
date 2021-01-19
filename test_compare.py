@@ -15,6 +15,8 @@ from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 parser = argparse.ArgumentParser(
     description="Photo-Realistic Single Image Super-Resolution Comparation.")
+parser.add_argument("--srgan", type=bool, default=True, metavar="N",
+                    help="Test with SRGAN (default: True).")
 parser.add_argument("--dataset", type=str, metavar="N",
                     help="Folder with the dataset images.")
 parser.add_argument("--crop-size", type=int, default=400, metavar="N",
@@ -24,9 +26,14 @@ parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
 opt = parser.parse_args()
 
 # Create the necessary folders
-if not os.path.exists(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x" + str(opt.upscale_factor) + "x")):
-    os.makedirs(os.path.join("test", "SRGAN", str(
-        opt.upscale_factor) + "x" + str(opt.upscale_factor) + "x"))
+if opt.srgan:
+    if not os.path.exists(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x" + str(opt.upscale_factor) + "x")):
+        os.makedirs(os.path.join("test", "SRGAN", str(
+            opt.upscale_factor) + "x" + str(opt.upscale_factor) + "x"))
+else:
+    if not os.path.exists(os.path.join("test", "SRResNet", str(opt.upscale_factor) + "x" + str(opt.upscale_factor) + "x")):
+        os.makedirs(os.path.join("test", "SRResNet", str(
+            opt.upscale_factor) + "x" + str(opt.upscale_factor) + "x"))
 
 # Selection of appropriate treatment equipment
 if not torch.cuda.is_available():
@@ -41,8 +48,13 @@ dataloader = DataLoader(dataset, pin_memory=True)
 
 # Construct SRGAN model
 model = Generator(16, opt.upscale_factor).to(device)
-checkpoint = torch.load(os.path.join(
-    "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
+if opt.srgan:
+    checkpoint = torch.load(os.path.join(
+        "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
+else:
+    checkpoint = torch.load(os.path.join(
+        "weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
+
 model.load_state_dict(checkpoint["model"])
 
 # Set model eval mode
