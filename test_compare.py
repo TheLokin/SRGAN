@@ -97,7 +97,7 @@ for i, (input, target) in progress_bar:
     total_lpips_value[0] += lpips_value.item()
 
     src_img = cv2.resize(cv2.resize(lr_img, (opt.crop_size, opt.crop_size), interpolation=cv2.INTER_NEAREST),
-                         (opt.crop_size, opt.crop_size), interpolation=cv2.INTER_NEAREST)
+                         (2 * opt.crop_size, 2 * opt.crop_size), interpolation=cv2.INTER_NEAREST)
     cv2.imwrite(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x" +
                              str(opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_nn.bmp"), src_img)
     sr = transforms.ToTensor()(src_img).unsqueeze(0)
@@ -118,7 +118,7 @@ for i, (input, target) in progress_bar:
     total_lpips_value[1] += lpips_value.item()
 
     src_img = cv2.resize(cv2.resize(lr_img, (opt.crop_size, opt.crop_size), interpolation=cv2.INTER_LINEAR),
-                         (opt.crop_size, opt.crop_size), interpolation=cv2.INTER_LINEAR)
+                         (2 * opt.crop_size, 2 * opt.crop_size), interpolation=cv2.INTER_LINEAR)
     cv2.imwrite(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x" +
                              str(opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bl.bmp"), src_img)
     sr = transforms.ToTensor()(src_img).unsqueeze(0)
@@ -139,7 +139,7 @@ for i, (input, target) in progress_bar:
     total_lpips_value[2] += lpips_value.item()
 
     src_img = cv2.resize(cv2.resize(lr_img, (opt.crop_size, opt.crop_size), interpolation=cv2.INTER_CUBIC),
-                         (opt.crop_size, opt.crop_size), interpolation=cv2.INTER_CUBIC)
+                         (2 * opt.crop_size, 2 * opt.crop_size), interpolation=cv2.INTER_CUBIC)
     cv2.imwrite(os.path.join("test", "SRGAN", str(opt.upscale_factor) + "x" +
                              str(opt.upscale_factor) + "x", "SRGAN_" + str(i + 1) + "_bc.bmp"), src_img)
     sr = transforms.ToTensor()(src_img).unsqueeze(0)
