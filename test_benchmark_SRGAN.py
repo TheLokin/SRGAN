@@ -3,14 +3,16 @@ import cv2
 import lpips
 import torch
 import argparse
+import numpy as np
 import torchvision.utils as utils
 import torchvision.transforms as transforms
 
 from tqdm import tqdm
 from models import Generator
+from utils import structural_sim
 from torch.utils.data import DataLoader
 from dataset import TestDatasetFromFolder
-from sewar.full_ref import mse, rmse, psnr, ssim, msssim
+from sewar.full_ref import mse, rmse, psnr, msssim
 
 
 parser = argparse.ArgumentParser(
@@ -54,6 +56,9 @@ total_mse_value = [0, 0, 0, 0]
 total_rmse_value = [0, 0, 0, 0]
 total_psnr_value = [0, 0, 0, 0]
 total_ssim_value = [0, 0, 0, 0]
+total_l_value = [0, 0, 0, 0]
+total_c_value = [0, 0, 0, 0]
+total_s_value = [0, 0, 0, 0]
 total_ms_ssim_value = [0, 0, 0, 0]
 total_lpips_value = [0, 0, 0, 0]
 
@@ -83,14 +88,22 @@ for i, (input, target) in progress_bar:
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)
     psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
+    l_map, c_map, s_map = structural_sim(
+        src_img, dst_img, win_size=11, multichannel=True, gaussian_weights=True)
+    ssim_value = np.mean(l_map * c_map * s_map)
+    l_value = np.mean(l_map)
+    c_value = np.mean(c_map)
+    s_value = np.mean(s_map)
     ms_ssim_value = msssim(src_img, dst_img)
     lpips_value = lpips_loss(sr, hr)
 
     total_mse_value[0] += mse_value
     total_rmse_value[0] += rmse_value
     total_psnr_value[0] += psnr_value
-    total_ssim_value[0] += ssim_value[0]
+    total_ssim_value[0] += ssim_value
+    total_l_value[0] += l_value
+    total_c_value[0] += c_value
+    total_s_value[0] += s_value
     total_ms_ssim_value[0] += ms_ssim_value.real
     total_lpips_value[0] += lpips_value.item()
 
@@ -106,14 +119,22 @@ for i, (input, target) in progress_bar:
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)
     psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
+    l_map, c_map, s_map = structural_sim(
+        src_img, dst_img, win_size=11, multichannel=True, gaussian_weights=True)
+    ssim_value = np.mean(l_map * c_map * s_map)
+    l_value = np.mean(l_map)
+    c_value = np.mean(c_map)
+    s_value = np.mean(s_map)
     ms_ssim_value = msssim(src_img, dst_img)
     lpips_value = lpips_loss(sr, hr)
 
     total_mse_value[1] += mse_value
     total_rmse_value[1] += rmse_value
     total_psnr_value[1] += psnr_value
-    total_ssim_value[1] += ssim_value[0]
+    total_ssim_value[1] += ssim_value
+    total_l_value[1] += l_value
+    total_c_value[1] += c_value
+    total_s_value[1] += s_value
     total_ms_ssim_value[1] += ms_ssim_value.real
     total_lpips_value[1] += lpips_value.item()
 
@@ -129,14 +150,22 @@ for i, (input, target) in progress_bar:
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)
     psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
+    l_map, c_map, s_map = structural_sim(
+        src_img, dst_img, win_size=11, multichannel=True, gaussian_weights=True)
+    ssim_value = np.mean(l_map * c_map * s_map)
+    l_value = np.mean(l_map)
+    c_value = np.mean(c_map)
+    s_value = np.mean(s_map)
     ms_ssim_value = msssim(src_img, dst_img)
     lpips_value = lpips_loss(sr, hr)
 
     total_mse_value[2] += mse_value
     total_rmse_value[2] += rmse_value
     total_psnr_value[2] += psnr_value
-    total_ssim_value[2] += ssim_value[0]
+    total_ssim_value[2] += ssim_value
+    total_l_value[2] += l_value
+    total_c_value[2] += c_value
+    total_s_value[2] += s_value
     total_ms_ssim_value[2] += ms_ssim_value.real
     total_lpips_value[2] += lpips_value.item()
 
@@ -152,14 +181,22 @@ for i, (input, target) in progress_bar:
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)
     psnr_value = psnr(src_img, dst_img)
-    ssim_value = ssim(src_img, dst_img)
+    l_map, c_map, s_map = structural_sim(
+        src_img, dst_img, win_size=11, multichannel=True, gaussian_weights=True)
+    ssim_value = np.mean(l_map * c_map * s_map)
+    l_value = np.mean(l_map)
+    c_value = np.mean(c_map)
+    s_value = np.mean(s_map)
     ms_ssim_value = msssim(src_img, dst_img)
     lpips_value = lpips_loss(sr, hr)
 
     total_mse_value[3] += mse_value
     total_rmse_value[3] += rmse_value
     total_psnr_value[3] += psnr_value
-    total_ssim_value[3] += ssim_value[0]
+    total_ssim_value[3] += ssim_value
+    total_l_value[3] += l_value
+    total_c_value[3] += c_value
+    total_s_value[3] += s_value
     total_ms_ssim_value[3] += ms_ssim_value.real
     total_lpips_value[3] += lpips_value.item()
 
@@ -170,6 +207,9 @@ avg_mse_value = total_mse_value[0] / len(dataloader)
 avg_rmse_value = total_rmse_value[0] / len(dataloader)
 avg_psnr_value = total_psnr_value[0] / len(dataloader)
 avg_ssim_value = total_ssim_value[0] / len(dataloader)
+avg_l_value = total_l_value[0] / len(dataloader)
+avg_c_value = total_c_value[0] / len(dataloader)
+avg_s_value = total_s_value[0] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[0] / len(dataloader)
 avg_lpips_value = total_lpips_value[0] / len(dataloader)
 
@@ -178,6 +218,9 @@ print("\n=== Performance summary SRGAN (upsampling x" + str(opt.upscale_factor) 
       "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
+      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
+      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
+      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
@@ -185,6 +228,9 @@ avg_mse_value = total_mse_value[1] / len(dataloader)
 avg_rmse_value = total_rmse_value[1] / len(dataloader)
 avg_psnr_value = total_psnr_value[1] / len(dataloader)
 avg_ssim_value = total_ssim_value[1] / len(dataloader)
+avg_l_value = total_l_value[1] / len(dataloader)
+avg_c_value = total_c_value[1] / len(dataloader)
+avg_s_value = total_s_value[1] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[1] / len(dataloader)
 avg_lpips_value = total_lpips_value[1] / len(dataloader)
 
@@ -193,6 +239,9 @@ print("\n=== Performance summary nearest neighbor (upsampling x" + str(opt.upsca
       "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
+      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
+      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
+      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
@@ -200,6 +249,9 @@ avg_mse_value = total_mse_value[2] / len(dataloader)
 avg_rmse_value = total_rmse_value[2] / len(dataloader)
 avg_psnr_value = total_psnr_value[2] / len(dataloader)
 avg_ssim_value = total_ssim_value[2] / len(dataloader)
+avg_l_value = total_l_value[2] / len(dataloader)
+avg_c_value = total_c_value[2] / len(dataloader)
+avg_s_value = total_s_value[2] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[2] / len(dataloader)
 avg_lpips_value = total_lpips_value[2] / len(dataloader)
 
@@ -208,6 +260,9 @@ print("\n=== Performance summary bilinear (upsampling x" + str(opt.upscale_facto
       "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
+      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
+      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
+      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}".format(avg_lpips_value))
 
@@ -215,6 +270,9 @@ avg_mse_value = total_mse_value[3] / len(dataloader)
 avg_rmse_value = total_rmse_value[3] / len(dataloader)
 avg_psnr_value = total_psnr_value[3] / len(dataloader)
 avg_ssim_value = total_ssim_value[3] / len(dataloader)
+avg_l_value = total_l_value[3] / len(dataloader)
+avg_c_value = total_c_value[3] / len(dataloader)
+avg_s_value = total_s_value[3] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[3] / len(dataloader)
 avg_lpips_value = total_lpips_value[3] / len(dataloader)
 
@@ -223,5 +281,8 @@ print("\n=== Performance summary bicubic (upsampling x" + str(opt.upscale_factor
       "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
       "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
       "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
+      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
+      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
+      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
       "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
       "Avg LPIPS: {:.4f}".format(avg_lpips_value))
