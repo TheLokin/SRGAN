@@ -162,8 +162,11 @@ def structural_sim(X, Y, win_size=None, data_range=None, multichannel=False, gau
     uyy = filter_func(Y * Y, **filter_args)
     uxy = filter_func(X * Y, **filter_args)
     vx = cov_norm * (uxx - ux * ux)
+    vx[vx < 0] = 0
     vy = cov_norm * (uyy - uy * uy)
+    vy[vy < 0] = 0
     vxy = cov_norm * (uxy - ux * uy)
+    vxy[vxy < 0] = 0
     stdx = np.sqrt(vx)
     stdy = np.sqrt(vy)
 
