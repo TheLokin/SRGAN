@@ -57,7 +57,7 @@ class Generator(nn.Module):
         )
 
         # Upsampling layers
-        for i in range(math.log(upsample_factor, 2)):
+        for i in range(int(math.log(upsample_factor, 2))):
             self.add_module("upsample" + str(i + 1), UpsampleBlock(64, 2))
 
         # Third convolutional layer post upsampling blocks
@@ -72,7 +72,7 @@ class Generator(nn.Module):
 
         out = self.conv2(out) + cache
 
-        for i in range(math.log(self.upsample_factor, 2)):
+        for i in range(int(math.log(self.upsample_factor, 2))):
             out = self.__getattr__("upsample" + str(i + 1))(out)
 
         out = self.conv3(out)
