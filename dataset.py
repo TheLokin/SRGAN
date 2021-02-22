@@ -12,7 +12,7 @@ class TrainDatasetFromFolder(Dataset):
         crop_size -= crop_size % upscale_factor
 
         self.hr_transform = transforms.Compose([
-            transforms.RandomCrop(crop_size),
+            transforms.Resize(crop_size, interpolation=Image.BICUBIC),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.ToTensor()
