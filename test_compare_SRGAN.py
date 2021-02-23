@@ -1,7 +1,9 @@
 import os
 import cv2
+import csv
 import lpips
 import torch
+import shutil
 import argparse
 import numpy as np
 import torchvision.utils as utils
@@ -31,7 +33,14 @@ target_size = opt.crop_size * opt.upscale_factor_compare
 upscales = opt.upscale_factor_compare // opt.upscale_factor
 
 # Create the necessary folders
-if not os.path.exists("test"):
+if os.path.exists("test"):
+    for filename in os.listdir("test"):
+        filepath = os.path.join("test", filename)
+        if os.path.isfile(filepath) or os.path.islink(filepath):
+            os.unlink(filepath)
+        elif os.path.isdir(filepath):
+            shutil.rmtree(filepath)
+
     os.makedirs("test")
 
 # Selection of appropriate treatment equipment
@@ -227,16 +236,18 @@ avg_s_value = total_s_value[0] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[0] / len(dataloader)
 avg_lpips_value = total_lpips_value[0] / len(dataloader)
 
-print("\n=== Performance summary SRGAN (upsampling x" + str(opt.upscale_factor) + "x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
-      "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
-      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
-      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
-      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
-      "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
+with open(os.path.join("test", "results.csv"), "w+") as file:
+    writer = csv.writer(file)
+    writer.writerow(["SRGAN", "results"])
+    writer.writerow(["Avg MSE", "{:.4f}".format(avg_mse_value)])
+    writer.writerow(["Avg RMSE", "{:.4f}".format(avg_rmse_value)])
+    writer.writerow(["Avg PSNR", "{:.4f}".format(avg_psnr_value)])
+    writer.writerow(["Avg SSIM", "{:.4f}".format(avg_ssim_value)])
+    writer.writerow(["Avg SSIM Luminance", "{:.4f}".format(avg_l_value)])
+    writer.writerow(["Avg SSIM Contrast", "{:.4f}".format(avg_c_value)])
+    writer.writerow(["Avg SSIM Structural", "{:.4f}".format(avg_s_value)])
+    writer.writerow(["Avg MS-SSIM", "{:.4f}".format(avg_ms_ssim_value)])
+    writer.writerow(["Avg LPIPS", "{:.4f}".format(avg_lpips_value)])
 
 avg_mse_value = total_mse_value[1] / len(dataloader)
 avg_rmse_value = total_rmse_value[1] / len(dataloader)
@@ -248,16 +259,18 @@ avg_s_value = total_s_value[1] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[1] / len(dataloader)
 avg_lpips_value = total_lpips_value[1] / len(dataloader)
 
-print("\n=== Performance summary nearest neighbor (upsampling x" + str(opt.upscale_factor) + "x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
-      "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
-      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
-      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
-      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
-      "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
+with open(os.path.join("test", "results.csv"), "a+") as file:
+    writer = csv.writer(file)
+    writer.writerow(["nn", "results"])
+    writer.writerow(["Avg MSE", "{:.4f}".format(avg_mse_value)])
+    writer.writerow(["Avg RMSE", "{:.4f}".format(avg_rmse_value)])
+    writer.writerow(["Avg PSNR", "{:.4f}".format(avg_psnr_value)])
+    writer.writerow(["Avg SSIM", "{:.4f}".format(avg_ssim_value)])
+    writer.writerow(["Avg SSIM Luminance", "{:.4f}".format(avg_l_value)])
+    writer.writerow(["Avg SSIM Contrast", "{:.4f}".format(avg_c_value)])
+    writer.writerow(["Avg SSIM Structural", "{:.4f}".format(avg_s_value)])
+    writer.writerow(["Avg MS-SSIM", "{:.4f}".format(avg_ms_ssim_value)])
+    writer.writerow(["Avg LPIPS", "{:.4f}".format(avg_lpips_value)])
 
 avg_mse_value = total_mse_value[2] / len(dataloader)
 avg_rmse_value = total_rmse_value[2] / len(dataloader)
@@ -269,16 +282,18 @@ avg_s_value = total_s_value[2] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[2] / len(dataloader)
 avg_lpips_value = total_lpips_value[2] / len(dataloader)
 
-print("\n=== Performance summary bilinear (upsampling x" + str(opt.upscale_factor) + "x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
-      "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
-      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
-      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
-      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
-      "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
+with open(os.path.join("test", "results.csv"), "a+") as file:
+    writer = csv.writer(file)
+    writer.writerow(["bl", "results"])
+    writer.writerow(["Avg MSE", "{:.4f}".format(avg_mse_value)])
+    writer.writerow(["Avg RMSE", "{:.4f}".format(avg_rmse_value)])
+    writer.writerow(["Avg PSNR", "{:.4f}".format(avg_psnr_value)])
+    writer.writerow(["Avg SSIM", "{:.4f}".format(avg_ssim_value)])
+    writer.writerow(["Avg SSIM Luminance", "{:.4f}".format(avg_l_value)])
+    writer.writerow(["Avg SSIM Contrast", "{:.4f}".format(avg_c_value)])
+    writer.writerow(["Avg SSIM Structural", "{:.4f}".format(avg_s_value)])
+    writer.writerow(["Avg MS-SSIM", "{:.4f}".format(avg_ms_ssim_value)])
+    writer.writerow(["Avg LPIPS", "{:.4f}".format(avg_lpips_value)])
 
 avg_mse_value = total_mse_value[3] / len(dataloader)
 avg_rmse_value = total_rmse_value[3] / len(dataloader)
@@ -290,13 +305,15 @@ avg_s_value = total_s_value[3] / len(dataloader)
 avg_ms_ssim_value = total_ms_ssim_value[3] / len(dataloader)
 avg_lpips_value = total_lpips_value[3] / len(dataloader)
 
-print("\n=== Performance summary bicubic (upsampling x" + str(opt.upscale_factor) + "x" + str(opt.upscale_factor) + ")" + "\n" +
-      "Avg MSE: {:.4f}\n".format(avg_mse_value) +
-      "Avg RMSE: {:.4f}\n".format(avg_rmse_value) +
-      "Avg PSNR: {:.4f}\n".format(avg_psnr_value) +
-      "Avg SSIM: {:.4f}\n".format(avg_ssim_value) +
-      "Avg SSIM Luminance: {:.4f}\n".format(avg_l_value) +
-      "Avg SSIM Contrast: {:.4f}\n".format(avg_c_value) +
-      "Avg SSIM Structural: {:.4f}\n".format(avg_s_value) +
-      "Avg MS-SSIM: {:.4f}\n".format(avg_ms_ssim_value) +
-      "Avg LPIPS: {:.4f}".format(avg_lpips_value))
+with open(os.path.join("test", "results.csv"), "a+") as file:
+    writer = csv.writer(file)
+    writer.writerow(["bc", "results"])
+    writer.writerow(["Avg MSE", "{:.4f}".format(avg_mse_value)])
+    writer.writerow(["Avg RMSE", "{:.4f}".format(avg_rmse_value)])
+    writer.writerow(["Avg PSNR", "{:.4f}".format(avg_psnr_value)])
+    writer.writerow(["Avg SSIM", "{:.4f}".format(avg_ssim_value)])
+    writer.writerow(["Avg SSIM Luminance", "{:.4f}".format(avg_l_value)])
+    writer.writerow(["Avg SSIM Contrast", "{:.4f}".format(avg_c_value)])
+    writer.writerow(["Avg SSIM Structural", "{:.4f}".format(avg_s_value)])
+    writer.writerow(["Avg MS-SSIM", "{:.4f}".format(avg_ms_ssim_value)])
+    writer.writerow(["Avg LPIPS", "{:.4f}".format(avg_lpips_value)])
