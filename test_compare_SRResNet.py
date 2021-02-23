@@ -238,7 +238,7 @@ avg_lpips_value = total_lpips_value[0] / len(dataloader)
 
 with open(os.path.join("test", "results.csv"), "w+") as file:
     writer = csv.writer(file)
-    writer.writerow(["SRGAN", "results"])
+    writer.writerow(["SRResNet", "results"])
     writer.writerow(["Avg MSE", "{:.4f}".format(avg_mse_value)])
     writer.writerow(["Avg RMSE", "{:.4f}".format(avg_rmse_value)])
     writer.writerow(["Avg PSNR", "{:.4f}".format(avg_psnr_value)])
