@@ -87,7 +87,7 @@ adversarial_criterion = nn.BCELoss().to(device)
 optimizer = optim.Adam(netG.parameters())
 
 # Loading PSNR pre training model
-print("[*] Start training PSNR model.")
+print("[*] Start training SRResNet model.")
 checkpoint = load_checkpoint(netG, optimizer, os.path.join(
     "weight", "SRResNet", "SRResNet_" + str(opt.upscale_factor) + "x.pth"))
 
@@ -98,7 +98,7 @@ if checkpoint == 0:
         writer.writerow(["Epoch", "MSE Loss"])
 
 # Pre-train generator using raw MSE loss
-for epoch in range(checkpoint + 1, opt.epoch_psnr + 1):
+for epoch in range(checkpoint + 1, opt.epoch_SRResNet + 1):
     progress_bar = tqdm(enumerate(dataloader), total=len(dataloader))
     avg_loss = 0
 
@@ -124,7 +124,7 @@ for epoch in range(checkpoint + 1, opt.epoch_psnr + 1):
 
         avg_loss += mse_loss.item()
 
-        progress_bar.set_description("[" + str(epoch) + "/" + str(opt.epoch_psnr) + "][" + str(
+        progress_bar.set_description("[" + str(epoch) + "/" + str(opt.epoch_SRResNet) + "][" + str(
             i + 1) + "/" + str(len(dataloader)) + "] MSE loss: {:.6f}".format(mse_loss.item()))
 
         # The image is saved every 5000 iterations
