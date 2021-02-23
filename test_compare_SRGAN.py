@@ -40,7 +40,7 @@ if os.path.exists("test"):
             os.unlink(filepath)
         elif os.path.isdir(filepath):
             shutil.rmtree(filepath)
-
+else:
     os.makedirs("test")
 
 # Selection of appropriate treatment equipment
