@@ -9,10 +9,22 @@ import torchvision.utils as utils
 
 from tqdm import tqdm
 from loss import ContentLoss
+from pytorch_msssim import SSIM
 from utils import load_checkpoint
 from torch.utils.data import DataLoader
 from dataset import TrainDatasetFromFolder
 from models import Generator, Discriminator
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 parser = argparse.ArgumentParser(
@@ -23,10 +35,12 @@ parser.add_argument("--crop-size", type=int, default=200, metavar="N",
                     help="Crop size for the training images (default: 200).")
 parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
                     help="Low to high resolution scaling factor (default: 2).")
-parser.add_argument("--epoch-psnr", type=int, default=1000, metavar="N",
-                    help="The number of iterations is need in the training of PSNR model (default: 1000).")
+parser.add_argument("--epoch-SRResNet", type=int, default=1000, metavar="N",
+                    help="The number of iterations is need in the training of SRResNet model (default: 1000).")
 parser.add_argument("--epoch", type=int, default=5000, metavar="N",
                     help="The number of iterations is need in the training of SRGAN model (default: 5000).")
+parser.add_argument("--ssim-loss", type=str2bool, nargs="?", const=True, default=False,
+                    help="Use SSIM as loss function (default: False).")
 opt = parser.parse_args()
 
 target_size = opt.crop_size * opt.upscale_factor
@@ -60,7 +74,10 @@ netD.train()
 netG.train()
 
 # We use VGG as our feature extraction method by default
-content_criterion = ContentLoss().to(device)
+if opt.ssim_loss:
+    content_criterion = SSIM(data_range=255, size_average=True, channel=3)
+else:
+    content_criterion = ContentLoss().to(device)
 
 # Perceptual loss = content loss + 1e-3 * adversarial loss
 mse_criterion = nn.MSELoss().to(device)
@@ -205,7 +222,10 @@ for epoch in range(checkpoint + 1, opt.epoch + 1):
 
         # We then define the VGG loss as the euclidean distance between the feature representations of
         # a reconstructed image G(LR) and the reference image LR
-        content_loss = content_criterion(sr, hr)
+        if opt.ssim_loss:
+            content_loss = 1 - content_criterion(sr, hr)
+        else:
+            content_loss = content_criterion(sr, hr)
 
         # Second train with fake high resolution image
         sr_output = netD(sr)
