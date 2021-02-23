@@ -31,7 +31,7 @@ parser.add_argument("--upscale-factor-compare", type=int, default=4, metavar="N"
 opt = parser.parse_args()
 
 target_size = opt.crop_size * opt.upscale_factor_compare
-upscales = int(math.log(opt.upsample_factor_compare, opt.upscale_factor))
+upscales = int(math.log(opt.upscale_factor_compare, opt.upscale_factor))
 
 # Create the necessary folders
 if os.path.exists("test"):
