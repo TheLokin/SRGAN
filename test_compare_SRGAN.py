@@ -130,6 +130,7 @@ for i, (input, target) in progress_bar:
     for _ in range(upscales):
         src_img = cv2.resize(src_img, (size, size),
                              interpolation=cv2.INTER_NEAREST)
+        size *= opt.upscale_factor
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_nn.bmp"), src_img)
@@ -164,6 +165,7 @@ for i, (input, target) in progress_bar:
     for _ in range(upscales):
         src_img = cv2.resize(src_img, (size, size),
                              interpolation=cv2.INTER_LINEAR)
+        size *= opt.upscale_factor
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_bl.bmp"), src_img)
@@ -198,6 +200,7 @@ for i, (input, target) in progress_bar:
     for _ in range(upscales):
         src_img = cv2.resize(src_img, (size, size),
                              interpolation=cv2.INTER_CUBIC)
+        size *= opt.upscale_factor
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_bc.bmp"), src_img)
