@@ -19,8 +19,8 @@ parser = argparse.ArgumentParser(
     description="Photo-Realistic Single Image Super-Resolution Training.")
 parser.add_argument("--dataset", type=str, metavar="N",
                     help="Folder with the dataset images.")
-parser.add_argument("--crop-size", type=int, default=400, metavar="N",
-                    help="Crop size for the training images (default: 400).")
+parser.add_argument("--crop-size", type=int, default=200, metavar="N",
+                    help="Crop size for the training images (default: 200).")
 parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
                     help="Low to high resolution scaling factor (default: 2).")
 parser.add_argument("--epoch-psnr", type=int, default=1000, metavar="N",
@@ -28,6 +28,8 @@ parser.add_argument("--epoch-psnr", type=int, default=1000, metavar="N",
 parser.add_argument("--epoch", type=int, default=5000, metavar="N",
                     help="The number of iterations is need in the training of SRGAN model (default: 5000).")
 opt = parser.parse_args()
+
+target_size = opt.crop_size * opt.upscale_factor
 
 # Create the necessary folders
 for path in [os.path.join("weight", "SRResNet"),
@@ -46,7 +48,7 @@ else:
 
 # Load dataset
 dataset = TrainDatasetFromFolder(
-    opt.dataset, opt.crop_size, opt.upscale_factor)
+    opt.dataset, target_size, opt.upscale_factor)
 dataloader = DataLoader(dataset, pin_memory=True)
 
 # Construct network architecture model of generator and discriminator
