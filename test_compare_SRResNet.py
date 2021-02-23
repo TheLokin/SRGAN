@@ -125,9 +125,9 @@ for i, (input, target) in progress_bar:
     total_lpips_value[0] += lpips_value.item()
 
     src_img = lr_img
-    for i in range(1, upscales + 1):
-        src_img = cv2.resize(src_img, (opt.crop_size * opt.upscale_factor * i,
-                                       opt.crop_size * opt.upscale_factor * i), interpolation=cv2.INTER_NEAREST)
+    for j in range(1, upscales + 1):
+        src_img = cv2.resize(src_img, (opt.crop_size * opt.upscale_factor * j,
+                                       opt.crop_size * opt.upscale_factor * j), interpolation=cv2.INTER_NEAREST)
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_nn.bmp"), src_img)
@@ -158,9 +158,9 @@ for i, (input, target) in progress_bar:
     total_lpips_value[1] += lpips_value.item()
 
     src_img = lr_img
-    for i in range(1, upscales + 1):
-        src_img = cv2.resize(src_img, (opt.crop_size * opt.upscale_factor * i,
-                                       opt.crop_size * opt.upscale_factor * i), interpolation=cv2.INTER_LINEAR)
+    for j in range(1, upscales + 1):
+        src_img = cv2.resize(src_img, (opt.crop_size * opt.upscale_factor * j,
+                                       opt.crop_size * opt.upscale_factor * j), interpolation=cv2.INTER_LINEAR)
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_bl.bmp"), src_img)
@@ -191,9 +191,9 @@ for i, (input, target) in progress_bar:
     total_lpips_value[2] += lpips_value.item()
 
     src_img = lr_img
-    for i in range(1, upscales + 1):
-        src_img = cv2.resize(src_img, (opt.crop_size * opt.upscale_factor * i,
-                                       opt.crop_size * opt.upscale_factor * i), interpolation=cv2.INTER_CUBIC)
+    for j in range(1, upscales + 1):
+        src_img = cv2.resize(src_img, (opt.crop_size * opt.upscale_factor * j,
+                                       opt.crop_size * opt.upscale_factor * j), interpolation=cv2.INTER_CUBIC)
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_bc.bmp"), src_img)
