@@ -4,7 +4,6 @@ import csv
 import math
 import lpips
 import torch
-import shutil
 import argparse
 import numpy as np
 import torchvision.utils as utils
@@ -12,9 +11,9 @@ import torchvision.transforms as transforms
 
 from tqdm import tqdm
 from models import Generator
-from utils import structural_sim
 from torch.utils.data import DataLoader
 from dataset import TestDatasetFromFolder
+from utils import remove_folder, structural_sim
 from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 
@@ -35,12 +34,7 @@ upscales = int(math.log(opt.upscale_factor_compare, opt.upscale_factor))
 
 # Create the necessary folders
 if os.path.exists("test"):
-    for filename in os.listdir("test"):
-        filepath = os.path.join("test", filename)
-        if os.path.isfile(filepath) or os.path.islink(filepath):
-            os.unlink(filepath)
-        elif os.path.isdir(filepath):
-            shutil.rmtree(filepath)
+    remove_folder("test")
 else:
     os.makedirs("test")
 

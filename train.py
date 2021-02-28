@@ -3,17 +3,17 @@ import sys
 import csv
 import torch
 import argparse
+import pytorch_ssim
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.utils as utils
 
 from tqdm import tqdm
 from loss import ContentLoss
-from pytorch_msssim import SSIM
-from utils import load_checkpoint
 from torch.utils.data import DataLoader
 from dataset import TrainDatasetFromFolder
 from models import Generator, Discriminator
+from utils import remove_folder, load_checkpoint
 
 
 def str2bool(v):
@@ -37,10 +37,10 @@ parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
                     help="Low to high resolution scaling factor (default: 2).")
 parser.add_argument("--epoch-SRResNet", type=int, default=1000, metavar="N",
                     help="The number of iterations is need in the training of SRResNet model (default: 1000).")
-parser.add_argument("--epoch", type=int, default=5000, metavar="N",
-                    help="The number of iterations is need in the training of SRGAN model (default: 5000).")
 parser.add_argument("--ssim-loss", type=str2bool, nargs="?", const=True, default=False,
                     help="Use SSIM as loss function (default: False).")
+parser.add_argument("--epoch", type=int, default=5000, metavar="N",
+                    help="The number of iterations is need in the training of SRGAN model (default: 5000).")
 opt = parser.parse_args()
 
 target_size = opt.crop_size * opt.upscale_factor
@@ -48,8 +48,8 @@ target_size = opt.crop_size * opt.upscale_factor
 # Create the necessary folders
 for path in [os.path.join("weight", "SRResNet"),
              os.path.join("weight", "SRGAN"),
-             os.path.join("output", "SRResNet", str(opt.upscale_factor) + "x"),
-             os.path.join("output", "SRGAN", str(opt.upscale_factor) + "x")]:
+             os.path.join("output", "SRResNet"),
+             os.path.join("output", "SRGAN")]:
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -74,12 +74,10 @@ netD.train()
 netG.train()
 
 # We use VGG as our feature extraction method by default
-if opt.ssim_loss:
-    content_criterion = SSIM(data_range=255, size_average=True, channel=3)
-else:
-    content_criterion = ContentLoss().to(device)
+content_criterion = ContentLoss().to(device)
 
 # Perceptual loss = content loss + 1e-3 * adversarial loss
+ssim_criterion = pytorch_ssim.SSIM().to(device)
 mse_criterion = nn.MSELoss().to(device)
 adversarial_criterion = nn.BCELoss().to(device)
 
@@ -95,7 +93,10 @@ checkpoint = load_checkpoint(netG, optimizer, os.path.join(
 if checkpoint == 0:
     with open(os.path.join("weight", "SRResNet", "SRResNet_Loss_" + str(opt.upscale_factor) + "x.csv"), "w+") as file:
         writer = csv.writer(file)
-        writer.writerow(["Epoch", "MSE Loss"])
+        if opt.ssim_loss:
+            writer.writerow(["Epoch", "SSIM Loss"])
+        else:
+            writer.writerow(["Epoch", "MSE Loss"])
 
 # Pre-train generator using raw MSE loss
 for epoch in range(checkpoint + 1, opt.epoch_SRResNet + 1):
@@ -113,29 +114,36 @@ for epoch in range(checkpoint + 1, opt.epoch_SRResNet + 1):
         # Generating fake high resolution images from real low resolution images
         sr = netG(lr)
 
-        # The MSE of the generated fake high-resolution image and real high-resolution image is calculated
-        mse_loss = mse_criterion(sr, hr)
+        # The MSE or SSIM of the generated fake high-resolution image and real high-resolution image is calculated
+        if opt.ssim_loss:
+            loss = -ssim_criterion(sr, hr)
+        else:
+            loss = mse_criterion(sr, hr)
 
         # Calculate gradients for generator
-        mse_loss.backward()
+        loss.backward()
 
         # Update generator weights
         optimizer.step()
 
-        avg_loss += mse_loss.item()
-
-        progress_bar.set_description("[" + str(epoch) + "/" + str(opt.epoch_SRResNet) + "][" + str(
-            i + 1) + "/" + str(len(dataloader)) + "] MSE loss: {:.6f}".format(mse_loss.item()))
+        if opt.ssim_loss:
+            avg_loss += loss.data[0]
+            progress_bar.set_description("[" + str(epoch) + "/" + str(opt.epoch_SRResNet) + "][" + str(
+                i + 1) + "/" + str(len(dataloader)) + "] SSIM Loss: {:.6f}".format(loss.data[0]))
+        else:
+            avg_loss += loss.item()
+            progress_bar.set_description("[" + str(epoch) + "/" + str(opt.epoch_SRResNet) + "][" + str(
+                i + 1) + "/" + str(len(dataloader)) + "] MSE Loss: {:.6f}".format(loss.item()))
 
         # The image is saved every 5000 iterations
         total_iter = i + (epoch - 1) * len(dataloader)
         if (total_iter + 1) % 5000 == 0:
             utils.save_image(lr, os.path.join(
-                "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_" + str(total_iter + 1) + "_lr.bmp"))
+                "output", "SRResNet", "SRResNet_" + str(total_iter + 1) + "_lr.bmp"))
             utils.save_image(hr, os.path.join(
-                "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_" + str(total_iter + 1) + "_hr.bmp"))
+                "output", "SRResNet", "SRResNet_" + str(total_iter + 1) + "_hr.bmp"))
             utils.save_image(sr, os.path.join(
-                "output", "SRResNet", str(opt.upscale_factor) + "x", "SRResNet_" + str(total_iter + 1) + "_sr.bmp"))
+                "output", "SRResNet", "SRResNet_" + str(total_iter + 1) + "_sr.bmp"))
 
     # The model is saved every 1 epoch
     torch.save({"epoch": epoch,
@@ -222,10 +230,7 @@ for epoch in range(checkpoint + 1, opt.epoch + 1):
 
         # We then define the VGG loss as the euclidean distance between the feature representations of
         # a reconstructed image G(LR) and the reference image LR
-        if opt.ssim_loss:
-            content_loss = 1 - content_criterion(sr, hr)
-        else:
-            content_loss = content_criterion(sr, hr)
+        content_loss = content_criterion(sr, hr)
 
         # Second train with fake high resolution image
         sr_output = netD(sr)
@@ -254,11 +259,11 @@ for epoch in range(checkpoint + 1, opt.epoch + 1):
         total_iter = i + (epoch - 1) * len(dataloader)
         if (total_iter + 1) % 5000 == 0:
             utils.save_image(lr, os.path.join(
-                "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_" + str(total_iter + 1) + "_lr.bmp"))
+                "output", "SRGAN", "SRGAN_" + str(total_iter + 1) + "_lr.bmp"))
             utils.save_image(hr, os.path.join(
-                "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_" + str(total_iter + 1) + "_hr.bmp"))
+                "output", "SRGAN", "SRGAN_" + str(total_iter + 1) + "_hr.bmp"))
             utils.save_image(sr, os.path.join(
-                "output", "SRGAN", str(opt.upscale_factor) + "x", "SRGAN_" + str(total_iter + 1) + "_sr.bmp"))
+                "output", "SRGAN", "SRGAN_" + str(total_iter + 1) + "_sr.bmp"))
 
     # The model is saved every 1 epoch
     torch.save({"epoch": epoch,

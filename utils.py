@@ -1,5 +1,6 @@
 import os
 import torch
+import shutil
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
@@ -184,6 +185,15 @@ def structural_sim(X, Y, win_size=None, data_range=None, multichannel=False, gau
     S = s1 / s2
 
     return L, C, S
+
+
+def remove_folder(folder):
+    for filename in os.listdir(folder):
+        filepath = os.path.join(folder, filename)
+        if os.path.isfile(filepath) or os.path.islink(filepath):
+            os.unlink(filepath)
+        elif os.path.isdir(filepath):
+            shutil.rmtree(filepath)
 
 
 def load_checkpoint(model, optimizer, file):
