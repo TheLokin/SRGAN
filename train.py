@@ -127,9 +127,9 @@ for epoch in range(checkpoint + 1, opt.epoch_SRResNet + 1):
         optimizer.step()
 
         if opt.ssim_loss:
-            avg_loss += loss.data[0]
+            avg_loss -= loss.item()
             progress_bar.set_description("[" + str(epoch) + "/" + str(opt.epoch_SRResNet) + "][" + str(
-                i + 1) + "/" + str(len(dataloader)) + "] SSIM Loss: {:.6f}".format(loss.data[0]))
+                i + 1) + "/" + str(len(dataloader)) + "] SSIM Loss: {:.6f}".format(-loss.item()))
         else:
             avg_loss += loss.item()
             progress_bar.set_description("[" + str(epoch) + "/" + str(opt.epoch_SRResNet) + "][" + str(
