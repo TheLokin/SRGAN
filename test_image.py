@@ -40,7 +40,7 @@ model.load_state_dict(checkpoint["model"])
 # Set model eval mode
 model.eval()
 
-# Reference sources from `https://github.com/richzhang/PerceptualSimilarity`
+# Reference sources from 'https://github.com/richzhang/PerceptualSimilarity'
 lpips_loss = lpips.LPIPS(net="vgg").to(device)
 
 lr = Image.open(opt.lr_image)

@@ -1,7 +1,6 @@
 import os
 import cv2
 import csv
-import math
 import lpips
 import torch
 import argparse
@@ -11,26 +10,25 @@ import torchvision.transforms as transforms
 
 from tqdm import tqdm
 from models import Generator
+from utils import remove_folder, structural_sim
 from torch.utils.data import DataLoader
 from dataset import TestDatasetFromFolder
-from utils import remove_folder, structural_sim
 from sewar.full_ref import mse, rmse, psnr, ssim, msssim
 
 
 parser = argparse.ArgumentParser(
-    description="Photo-Realistic Single Image Super-Resolution Comparation.")
+    description="Photo-Realistic Single Image Super-Resolution Benchmark.")
 parser.add_argument("--dataset", type=str, metavar="N",
                     help="Folder with the dataset images.")
+parser.add_argument("--model", type=str, metavar="N",
+                    help="Folder with the trained model.")
 parser.add_argument("--crop-size", type=int, default=200, metavar="N",
                     help="Crop size for the training images (default: 200).")
 parser.add_argument("--upscale-factor", type=int, default=2, metavar="N",
                     help="Low to high resolution scaling factor (default: 2).")
-parser.add_argument("--upscale-factor-compare", type=int, default=4, metavar="N",
-                    help="Low to high resolution scaling factor to compare (default: 4).")
 opt = parser.parse_args()
 
-target_size = opt.crop_size * opt.upscale_factor_compare
-upscales = int(math.log(opt.upscale_factor_compare, opt.upscale_factor))
+target_size = opt.crop_size * opt.upscale_factor
 
 # Create the necessary folders
 if os.path.exists("test"):
@@ -45,20 +43,18 @@ else:
     device = "cuda:0"
 
 # Load dataset
-dataset = TestDatasetFromFolder(
-    opt.dataset, target_size, opt.upscale_factor_compare)
+dataset = TestDatasetFromFolder(opt.dataset, target_size, opt.upscale_factor)
 dataloader = DataLoader(dataset, pin_memory=True)
 
-# Construct SRGAN model
+# Construct SRResNet model
 model = Generator(16, opt.upscale_factor).to(device)
-checkpoint = torch.load(os.path.join(
-    "weight", "SRGAN", "netG_" + str(opt.upscale_factor) + "x.pth"), map_location=device)
+checkpoint = torch.load(opt.model, map_location=device)
 model.load_state_dict(checkpoint["model"])
 
 # Set model eval mode
 model.eval()
 
-# Reference sources from `https://github.com/richzhang/PerceptualSimilarity`
+# Reference sources from 'https://github.com/richzhang/PerceptualSimilarity'
 lpips_loss = lpips.LPIPS(net="vgg").to(device)
 
 # Algorithm performance
@@ -79,9 +75,7 @@ for i, (input, target) in progress_bar:
     hr = target.to(device)
 
     with torch.no_grad():
-        sr = lr
-        for _ in range(upscales):
-            sr = model(sr)
+        sr = model(lr)
 
     utils.save_image(lr, os.path.join(
         "test", "test_" + str(i + 1) + "_lr.bmp"))
@@ -95,7 +89,7 @@ for i, (input, target) in progress_bar:
     dst_img = cv2.imread(os.path.join(
         "test", "test_" + str(i + 1) + "_hr.bmp"))
     src_img = cv2.imread(os.path.join(
-        "test", "test_" + str(i + 1) + "_sr.bmp"))
+        "test",  "test_" + str(i + 1) + "_sr.bmp"))
 
     mse_value = mse(src_img, dst_img)
     rmse_value = rmse(src_img, dst_img)
@@ -119,12 +113,8 @@ for i, (input, target) in progress_bar:
     total_ms_ssim_value[0] += ms_ssim_value.real
     total_lpips_value[0] += lpips_value.item()
 
-    src_img = lr_img
-    size = opt.crop_size * opt.upscale_factor
-    for _ in range(upscales):
-        src_img = cv2.resize(src_img, (size, size),
-                             interpolation=cv2.INTER_NEAREST)
-        size *= opt.upscale_factor
+    src_img = cv2.resize(lr_img, (target_size, target_size),
+                         interpolation=cv2.INTER_NEAREST)
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_nn.bmp"), src_img)
@@ -154,12 +144,8 @@ for i, (input, target) in progress_bar:
     total_ms_ssim_value[1] += ms_ssim_value.real
     total_lpips_value[1] += lpips_value.item()
 
-    src_img = lr_img
-    size = opt.crop_size * opt.upscale_factor
-    for _ in range(upscales):
-        src_img = cv2.resize(src_img, (size, size),
-                             interpolation=cv2.INTER_LINEAR)
-        size *= opt.upscale_factor
+    src_img = cv2.resize(lr_img, (target_size, target_size),
+                         interpolation=cv2.INTER_LINEAR)
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_bl.bmp"), src_img)
@@ -189,12 +175,8 @@ for i, (input, target) in progress_bar:
     total_ms_ssim_value[2] += ms_ssim_value.real
     total_lpips_value[2] += lpips_value.item()
 
-    src_img = lr_img
-    size = opt.crop_size * opt.upscale_factor
-    for _ in range(upscales):
-        src_img = cv2.resize(src_img, (size, size),
-                             interpolation=cv2.INTER_CUBIC)
-        size *= opt.upscale_factor
+    src_img = cv2.resize(lr_img, (target_size, target_size),
+                         interpolation=cv2.INTER_CUBIC)
 
     cv2.imwrite(os.path.join("test", "test_" +
                              str(i + 1) + "_bc.bmp"), src_img)
@@ -239,7 +221,6 @@ avg_lpips_value = total_lpips_value[0] / len(dataloader)
 
 with open(os.path.join("test", "results.csv"), "w+") as file:
     writer = csv.writer(file)
-    writer.writerow(["SRGAN", "results"])
     writer.writerow(["Avg MSE", "{:.4f}".format(avg_mse_value)])
     writer.writerow(["Avg RMSE", "{:.4f}".format(avg_rmse_value)])
     writer.writerow(["Avg PSNR", "{:.4f}".format(avg_psnr_value)])
